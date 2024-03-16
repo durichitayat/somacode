@@ -51,20 +51,26 @@ export default function  Login() {
             Home
           </h1>
 
+          <p className="text-lg">
+            Welcome to the Clue-less Game
+          </p>
+
+          {/* TODO: Welcome user to the game
+            * Introduce the user to the game
+            * Maybe a fun gif? 
+            **/ }
+
           <button 
             type="button" 
-            className="z-100 p-4 text-white bg-blue-500 rounded-lg" 
+            className="mt-10 py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-full" 
             onClick={handleClick}
           >
-            Submit
+            Get Started
           </button>
             
       </div>
 
-      <div>
-        <Link className="z-100" href="/login">Login</Link>
-        <Link href="/dashboard">Dashboard</Link>
-        <Link href="/game">Game</Link>
+      <div className="" >
       </div>
 
     </main>
