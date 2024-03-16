@@ -21,7 +21,7 @@ export default function RootLayout({
         
         <AdminSidebar />
 
-        <main>
+        <main className="sm:ml-48">
           {children}
         </main>
         
