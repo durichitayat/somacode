@@ -35,7 +35,7 @@ export default function Dashboard() {
                 <td className="border border-gray-400 px-4 py-2">{game.name}</td>
                 {/* Join Game button with Link */}
                 <td className="border border-gray-400 px-4 py-2">
-                  <Link href="/game-lobby/page">
+                  <Link href="/game-lobby">
                     <div className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded cursor-pointer">
                       Join Game
                     </div>
