@@ -3,6 +3,7 @@
 import { sql } from "@vercel/postgres";
 import { unstable_noStore as noStore } from "next/cache";
 import BlockButton from "../components/BlockButton";
+import DeleteButton from "../components/DeleteButton";
 
 export default async function Users({
   params
@@ -74,7 +75,7 @@ export default async function Users({
                 <th scope="col" className="px-6 py-3">
                   Status
                 </th>
-                <th scope="col" className="px-6 py-3">
+                <th scope="col" colSpan={2} className="px-6 py-3">
                   Action
                 </th>
               </tr>
@@ -104,7 +105,8 @@ export default async function Users({
                 </td>
                 
                 <BlockButton email={row.email} status={row.status} />
-                
+                <DeleteButton email={row.email} />
+
               </tr>
 
             ))}

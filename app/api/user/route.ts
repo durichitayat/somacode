@@ -49,13 +49,6 @@ export async function PATCH (request: Request) {
   const image = data.image;
   const name = data.name;
 
-  // FormData
-  // const data = await request.formData();
-  // const email = data.get('email');
-  // const status = data.get('status');
-  // const image = data.get('image');
-  // const name = data.get('name');
-
   try {
     if ( !email || email === null || email === undefined ) {
       return NextResponse.json({error: 'Missing email'}, {status: 400});
@@ -79,4 +72,22 @@ export async function PATCH (request: Request) {
   const users = await sql`SELECT * FROM Users`; //WHERE email = ${email}
   console.log(users);
   return NextResponse.json(users, {status: 200});
+}
+
+export async function DELETE (request: Request) {
+  // JSON
+  const data = await request.json();
+  const email = data.email;
+
+  try {
+    if (!email ) {
+      return NextResponse.json({error: 'Missing email'}, {status: 400});
+    }
+    await sql`
+    DELETE FROM Users WHERE email = ${email}`
+  } catch (error) {
+    return NextResponse.json({error}, {status: 500});
+  }
+
+  return NextResponse.json({message: 'User deleted successfully'}, {status: 200});
 }
