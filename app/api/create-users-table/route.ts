@@ -16,7 +16,7 @@ export async function GET (request: Request) {
       // Then, create the table
       const result = 
           await sql`
-          CREATE TABLE Users (
+          CREATE TABLE IF NOT EXISTS Users (
             userId UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             email VARCHAR(255),
             name VARCHAR(255),
