@@ -1,6 +1,7 @@
 'use client'
 
-import Link from "next/link";
+import Image from 'next/image'
+import Link from 'next/link'
 
 export default function  Login() {
 
@@ -51,6 +52,8 @@ export default function  Login() {
             Home
           </h1>
 
+          <Image src="/clueless.webp" alt="Clueless" width={500} height={500} />
+
           <p className="text-lg">
             Welcome to the Clue-less Game
           </p>
@@ -60,13 +63,13 @@ export default function  Login() {
             * Maybe a fun gif? 
             **/ }
 
-          <button 
+          <Link 
             type="button" 
             className="mt-10 py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-full" 
-            onClick={handleClick}
+            href="/dashboard"
           >
             Get Started
-          </button>
+          </Link>
             
       </div>
 
