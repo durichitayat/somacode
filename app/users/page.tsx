@@ -13,19 +13,6 @@ export default async function Users({
   noStore()
   const { rows } = await sql`SELECT * FROM Users`;
 
-  const handleBlock = async () => {
-    try {
-      const response = await fetch('/api/user', {
-        method: 'PATCH',
-        body: JSON.stringify({ status: "dataValue" }),
-      });
-      const data = await response.json();
-      console.log(data.message);
-    } catch (error) {
-      console.error('An error occurred:', error);
-    }
-  };
-
   return (
   <>
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
