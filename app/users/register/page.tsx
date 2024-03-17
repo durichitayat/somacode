@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { FormEvent } from "react";
 
 export default function Register() {
-  const router = useRouter();
+  // const router = useRouter();
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -23,7 +23,7 @@ export default function Register() {
     // alert(data.message)
 
     // Redirect to the user's profile page
-    router.push(`/users/${userid}`);
+    // router.push(`/users/${userid}`);
   }
 
 
