@@ -20,6 +20,11 @@ export async function POST (request: Request) {
 
     console.log(email, image, name);
 
+    // Check if email, image, or name is missing
+    if (!email || !image || !name) {
+        return NextResponse.json({message: "Missing email, image, or name"}, {status: 400});
+    }
+
     try {
         await sql`
             INSERT INTO Users (email, image, name, status) VALUES 
@@ -29,5 +34,5 @@ export async function POST (request: Request) {
         return NextResponse.json({ error }, { status: 500 });
     }
 
-    return NextResponse.json({message:"User created"}, {status: 200});
+    return NextResponse.json({userid:"user12345"}, {status: 200});
 }

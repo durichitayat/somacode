@@ -1,7 +1,9 @@
 'use client'
+import { useRouter } from 'next/router';
 import { FormEvent } from "react";
 
 export default function Register() {
+  const router = useRouter();
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -14,7 +16,14 @@ export default function Register() {
  
     // Handle response 
     const data = await response.json()
-    alert(data.message)
+    const userid = data.userid
+
+    // Replace with a redirect to the user's profile page
+    // Profile page is /users/[slug] where slug is the userid returned from the response
+    // alert(data.message)
+
+    // Redirect to the user's profile page
+    router.push(`/users/${userid}`);
   }
 
 
