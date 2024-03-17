@@ -9,7 +9,14 @@ export default function Dashboard() {
       <h1 className="text-4xl">
         Dashboard
       </h1>
-      <div></div>
+      <div>
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          List Games
+        </button>
+        <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-4">
+          New Game
+        </button>
+      </div>
 
     </main>
   );
