@@ -18,7 +18,7 @@ function AuthButton() {
             Not signed in <br />
             <button onClick={() => signIn()}>Sign in</button>
         </>
-    )
+    );
 }
 
 export default function AdminSidebar() {
