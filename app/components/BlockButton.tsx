@@ -14,7 +14,7 @@ export default function BlockButton( params : { email: string, status: string}) 
       });
       const data = await response.json();
       console.log(data.message);
-      setStatus('blocked');
+      setStatus(oppositeStatus);
     } catch (error) {
       console.error('An error occurred:', error);
     }
