@@ -1,6 +1,14 @@
 import Link from "next/link"; // Import Link from next/link
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
 
-export default function Dashboard() {
+export default async function Dashboard() {
+
+  const session = await getServerSession();
+  if (!session || !session.user) {
+    redirect("/api/auth/signin")
+  }
+
   // Sample data for existing games (replace with actual data)
   const existingGames = [
     { id: 1, name: "Game 1" },

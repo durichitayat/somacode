@@ -4,6 +4,8 @@ import { sql } from "@vercel/postgres";
 import { unstable_noStore as noStore } from "next/cache";
 import BlockButton from "../components/BlockButton";
 import DeleteButton from "../components/DeleteButton";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
 
 export default async function Users({
   params
@@ -11,6 +13,11 @@ export default async function Users({
   params: {
   user: string } 
   }) : Promise <JSX.Element> {
+  const session = await getServerSession();
+  // TODO this is already a user-protected route. we can easily implement an admin check here
+  if (!session || !session.user) {
+    redirect("/api/auth/signin")
+  }
   noStore()
   const { rows } = await sql`SELECT * FROM Users`;
 

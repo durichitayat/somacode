@@ -1,5 +1,5 @@
 import Image from "next/image";
-
+// depreciated? might nuke soon
 export default function Login() {
   return (
     <div className="flex min-h-screen flex-col items-center gap-10 p-24">
