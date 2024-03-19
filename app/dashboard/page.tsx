@@ -1,6 +1,10 @@
 import Link from "next/link"; // Import Link from next/link
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
+import { sql } from "@vercel/postgres";
+import { unstable_noStore as noStore } from "next/cache";
+import JoinButton from "../components/JoinButton";
+import NewGameButton from "../components/NewGameButton";
 
 export default async function Dashboard() {
 
@@ -8,6 +12,9 @@ export default async function Dashboard() {
   if (!session || !session.user) {
     redirect("/api/auth/signin")
   }
+
+  noStore()
+  const { rows } = await sql`SELECT * FROM Users`;
 
   // Sample data for existing games (replace with actual data)
   const existingGames = [
@@ -23,11 +30,7 @@ export default async function Dashboard() {
       <h1 className="text-4xl mb-8">Dashboard</h1>
 
       {/* New Game button with Link */}
-      <Link href="/game-lobby">
-        <div className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded cursor-pointer mb-4">
-          New Game
-        </div>
-      </Link>
+      <NewGameButton/>
 
       <div className="w-full">
         <table className="w-full border-collapse border rounded-lg">
@@ -42,13 +45,7 @@ export default async function Dashboard() {
               <tr key={game.id} className="text-center">
                 <td className="border border-gray-400 px-4 py-2">{game.name}</td>
                 {/* Join Game button with Link */}
-                <td className="border border-gray-400 px-4 py-2">
-                  <Link href="/game-lobby">
-                    <div className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded cursor-pointer">
-                      Join Game
-                    </div>
-                  </Link>
-                </td>
+                <JoinButton lobby={game.name} />
               </tr>
             ))}
           </tbody>
