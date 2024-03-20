@@ -3,35 +3,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-export default function  Login() {
-
-  const handleClick = async () => {
-    try {
-      // Use the fetch API to send a request to your API route
-      const response = await fetch('/api/login', {
-        method: 'POST', // or 'GET' if your API supports it
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Include body if you need to send data in your request (for POST requests)
-        // body: JSON.stringify({ yourData: "dataValue" }),
-      });
-
-      // Wait for the response from the API
-      const data = await response.json();
-
-      // Log the message or handle the response data as needed
-      console.log(data.message);
-    } catch (error) {
-      // Handle any errors that occur during the fetch
-      console.error('An error occurred:', error);
-    }
-  };
+export default function  Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300  bg-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
           {"We're just getting started."}
         </p>
         <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
