@@ -11,8 +11,8 @@ const { messages, input, handleInputChange, handleSubmit } = useChat({
   return (
     <div>
       {messages.map(m => (
-        <div key={m.id} className="p-3 mb-5 bg-slate-200 w-96">
-          <label className="text-slate-600 font-bold text-sm mr-2">{m.role === 'user' ? 'User: ' : 'Game Master: '}</label>
+        <div key={m.id} className="p-3 mb-5 bg-slate-200/10 w-96 rounded-sm">
+          <label className="text-slate-600 dark:text-slate-400 font-bold text-sm mr-2">{m.role === 'user' ? 'User: ' : 'Game Master: '}</label>
           {m.content}
         </div>
       ))}
