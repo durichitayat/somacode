@@ -1,33 +1,33 @@
-"use client";
-import Link from "next/link";
+'use client' 
 
-{ /* NewGameButton Component */ }
 export default function NewGameButton() {
 
   const handleNewGame = async () => {
     try {
       const response = await fetch('/api/lobby', {
-        method: 'GET',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: 'test' }),
       });
       const data = await response.json();
-      console.log(data.message);
+      const gameID = data.message;
+      console.log('New game created with ID:', gameID);
+
+      // Redirect to the new game lobby
+      window.location.replace(`/game/${gameID}`);
+      
     } catch (error) {
       console.error('An error occurred:', error);
     }
   };
 
-  const createSlug = () => {
-    const timestamp = Date.now();
-    return '/game-lobby/' + timestamp;
-  }
-
   return (
     <>
-    
-    <Link href={'/game-lobby/1710806066771'} onClick={handleNewGame} className='text-green-500 hover:text-white-700'>
-      New Game
-    </Link>
+      <button onClick={handleNewGame} className='py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-full'>
+        New Game
+      </button>
     </>
   )
-
 }

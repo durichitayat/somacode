@@ -28,6 +28,9 @@ export async function GET (request: Request) {
             MurderRoomID INT, 
             FOREIGN KEY (MurderRoomID) REFERENCES Rooms(RoomID),
 
+            GameOwnerID UUID,
+            FOREIGN KEY (GameOwnerID) REFERENCES Users(UserID),
+
             GameState VARCHAR(50),
             StartTime TIMESTAMP,
             EndTime TIMESTAMP,

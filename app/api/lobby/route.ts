@@ -8,19 +8,47 @@ import { NextResponse } from 'next/server';
   ***************/}
 
 export async function POST (request: Request) {
-  const { searchParams } = new URL(request.url);
-  const lobbyID = searchParams.get('lobby');
 
-//   try {
-//     if (!lobbyID) {
-//         return NextResponse.json({error: 'Missing lobby id'}, {status: 400});
-//     }
-//     // TODO query into database to fetch the lobby here
-//   } catch (error) {
-//     return NextResponse.json({error}, {status: 500});
-//   }
+  /**
+   * @todo: randomize the murderer, weapon, and room
+   */
+  const murdererID = 1;
+  const murderWeaponID = 1;
+  const murderRoomID = 1;
+  const gameState = 'open';
 
-  return NextResponse.json({message: 'Hello from lobby POST'}, {status: 200});
+  try {
+    const { username } = await request.json();
+    const result = await sql`
+      INSERT INTO Games (
+        MurdererID, 
+        MurderWeaponID, 
+        MurderRoomID, 
+        GameState, 
+        StartTime, 
+        EndTime, 
+        TurnCount, 
+        SolutionRevealed
+      ) 
+      VALUES (
+        ${murdererID}, 
+        ${murderWeaponID}, 
+        ${murderRoomID}, 
+        ${gameState}, 
+        NOW(), 
+        NULL, 
+        0, 
+        FALSE
+      )
+      RETURNING *
+    `;
+
+    const gameID = result.rows[0].gameid
+    return NextResponse.json({message: gameID}, {status: 200});
+  }
+  catch (error) {
+    return NextResponse.json({error}, {status: 500});
+  } 
 }
 
 export async function GET (request: Request) {
