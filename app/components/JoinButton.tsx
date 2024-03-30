@@ -21,7 +21,7 @@ export default function JoinButton( params : { gameid: string }) {
     <>
     
     <td className="px-6 py-4">
-      <Link href={'/game/' + params.gameid } onClick={handleJoin} className='text-blue-600 hover:text-blue-400 font-bold text-sm'>
+      <Link href={'/lobby/' + params.gameid } onClick={handleJoin} className='text-blue-600 hover:text-blue-500 font-semibold  text-sm'>
         Join Game
       </Link>
     </td>

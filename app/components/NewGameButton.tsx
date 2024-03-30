@@ -16,7 +16,7 @@ export default function NewGameButton() {
       console.log('New game created with ID:', gameID);
 
       // Redirect to the new game lobby
-      window.location.replace(`/game/${gameID}`);
+      window.location.replace(`/lobby/${gameID}`);
       
     } catch (error) {
       console.error('An error occurred:', error);
