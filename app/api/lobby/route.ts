@@ -24,5 +24,5 @@ export async function POST (request: Request) {
 }
 
 export async function GET (request: Request) {
-    return NextResponse.json({message: 'Hello from lobby GET'}, {status: 200});
-  }
+  return NextResponse.json({message: 'Hello from lobby GET'}, {status: 200});
+}
