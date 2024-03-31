@@ -18,6 +18,11 @@ export async function GET (request: Request) {
           await sql`
           CREATE TABLE IF NOT EXISTS Games (
             GameID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+            GameName VARCHAR(255),
+
+            GameOwner VARCHAR(255),
+            FOREIGN KEY (GameOwner) REFERENCES Users(email),
             
             MurdererID INT, 
             FOREIGN KEY (MurdererID) REFERENCES Characters(CharacterID),
@@ -28,14 +33,16 @@ export async function GET (request: Request) {
             MurderRoomID INT, 
             FOREIGN KEY (MurderRoomID) REFERENCES Rooms(RoomID),
 
-            GameOwnerID UUID,
-            FOREIGN KEY (GameOwnerID) REFERENCES Users(UserID),
-
             GameState VARCHAR(50),
+            
             StartTime TIMESTAMP,
             EndTime TIMESTAMP,
+            
+            CurrentTurn INT,
             TurnCount INT,
+
             SolutionRevealed BOOLEAN,
+            
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW()
           )

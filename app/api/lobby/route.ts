@@ -9,6 +9,8 @@ import { NextResponse } from 'next/server';
 
 export async function POST (request: Request) {
 
+  const { email, gameName } = await request.json();
+
   /**
    * @todo: randomize the murderer, weapon, and room
    */
@@ -18,9 +20,10 @@ export async function POST (request: Request) {
   const gameState = 'open';
 
   try {
-    const { username } = await request.json();
     const result = await sql`
       INSERT INTO Games (
+        GameName,
+        GameOwner,
         MurdererID, 
         MurderWeaponID, 
         MurderRoomID, 
@@ -31,6 +34,8 @@ export async function POST (request: Request) {
         SolutionRevealed
       ) 
       VALUES (
+        ${gameName},
+        ${email},
         ${murdererID}, 
         ${murderWeaponID}, 
         ${murderRoomID}, 

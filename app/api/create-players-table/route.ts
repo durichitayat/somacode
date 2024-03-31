@@ -16,36 +16,20 @@ export async function GET (request: Request) {
         await sql`
         CREATE TABLE IF NOT EXISTS Players (
           PlayerID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          UserID UUID,
-          FOREIGN KEY (UserID) REFERENCES Users(UserID),
+          email VARCHAR(255),
+          FOREIGN KEY (email) REFERENCES Users(email),
           GameID UUID,
           FOREIGN KEY (GameID) REFERENCES Games(GameID),
           PlayerName VARCHAR(50),
           PlayerType VARCHAR(50),
+          Winner BOOLEAN,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         )
       `
     console.log({table}, {status: 200});
+    return NextResponse.json({table}, {status: 200});
   } catch (error) {
       return NextResponse.json({error}, {status: 500});
   } 
-
-  try {
-
-    // Then, create the Rooms table
-    const update = 
-        await sql`
-        ALTER TABLE Games
-        ADD COLUMN CurrentTurn UUID,
-        ADD FOREIGN KEY (CurrentTurn) REFERENCES Players(PlayerID),
-        ADD COLUMN WinnerID UUID,
-        ADD FOREIGN KEY (WinnerID) REFERENCES Players(PlayerID)
-      `
-    console.log({update}, {status: 200});
-    return NextResponse.json({update}, {status: 200});
-  } catch (error) {
-      return NextResponse.json({error}, {status: 500});
-  }
-
 }

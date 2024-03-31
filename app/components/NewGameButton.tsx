@@ -1,6 +1,8 @@
-'use client' 
+'use client'
+import React, { useState } from 'react';
 
-export default function NewGameButton() {
+export default function NewGameButton( { session }: { session: any } ) {
+  const [gameName, setGameName] = useState('');
 
   const handleNewGame = async () => {
     try {
@@ -9,7 +11,10 @@ export default function NewGameButton() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username: 'test' }),
+        body: JSON.stringify({ 
+          email: session.user.email,
+          gameName: gameName,
+        }),
       });
       const data = await response.json();
       const gameID = data.message;
@@ -25,9 +30,13 @@ export default function NewGameButton() {
 
   return (
     <>
-      <button onClick={handleNewGame} className='py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-full'>
-        New Game
-      </button>
+      <div className="relative">
+        <label htmlFor="game-name" className="sr-only">Game Name</label>
+        <input id="game-name" type='text' placeholder="Enter game name" className="w-full py-2.5 px-5 pr-32 text-black bg-white border rounded-full outline-none focus:shadow-lg" onChange={(e) => setGameName(e.target.value)} />
+        <button onClick={handleNewGame} className='absolute top-0 right-0 py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-r-full'>
+          New Game
+        </button>
+      </div>
     </>
   )
 }

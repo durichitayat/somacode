@@ -16,16 +16,15 @@ export async function GET (request: Request) {
       // Then, create the table
       const result = 
           await sql`
-          CREATE TABLE IF NOT EXISTS Users (
-            userId UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            email VARCHAR(255),
-            name VARCHAR(255),
-            image VARCHAR(255),
-            status VARCHAR(255), 
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW()
-          )
-        `
+            CREATE TABLE IF NOT EXISTS Users (
+              email VARCHAR(255) PRIMARY KEY,
+              name VARCHAR(255),
+              image VARCHAR(255),
+              status VARCHAR(255), 
+              created_at TIMESTAMP DEFAULT NOW(),
+              updated_at TIMESTAMP DEFAULT NOW()
+            )
+            `
       return NextResponse.json({result}, {status: 200});
     } catch (error) {
         return NextResponse.json({error}, {status: 500});
