@@ -48,7 +48,6 @@ export default async function Dashboard() {
             <>
               
                 <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600" key={row.gameid}>
-                 
                   
                   <th scope="row" className="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
                     
@@ -67,11 +66,8 @@ export default async function Dashboard() {
               
             </>
           ))}
-
-
+          
           </tbody>
-
-
         </table>
       </div>
 

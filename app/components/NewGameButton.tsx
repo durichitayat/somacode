@@ -5,6 +5,7 @@ export default function NewGameButton( { session }: { session: any } ) {
   const [gameName, setGameName] = useState('');
 
   const handleNewGame = async () => {
+    if (gameName !== '') {
     try {
       const response = await fetch('/api/lobby', {
         method: 'POST',
@@ -25,6 +26,8 @@ export default function NewGameButton( { session }: { session: any } ) {
       
     } catch (error) {
       console.error('An error occurred:', error);
+    }} else {
+      alert('Game name cannot be empty');
     }
   };
 
@@ -32,8 +35,8 @@ export default function NewGameButton( { session }: { session: any } ) {
     <>
       <div className="relative">
         <label htmlFor="game-name" className="sr-only">Game Name</label>
-        <input id="game-name" type='text' placeholder="Enter game name" className="w-full py-2.5 px-5 pr-32 text-black bg-white border rounded-full outline-none focus:shadow-lg" onChange={(e) => setGameName(e.target.value)} />
-        <button onClick={handleNewGame} className='absolute top-0 right-0 py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-r-full'>
+        <input id="game-name" type='text' placeholder="Enter game name" className="w-full py-2.5 px-5 pr-32 text-black bg-white/80 border rounded-full outline-none focus:shadow-lg" onChange={(e) => setGameName(e.target.value)} required />
+        <button onClick={handleNewGame} className='absolute top-0 border border-l-2 border-l-gray-300 right-0 py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-r-full'>
           New Game
         </button>
       </div>
