@@ -13,9 +13,9 @@ export default async function Lobby( {params}: any ) {
 
   const { rows } = await sql`SELECT * FROM Players WHERE gameid = ${params.slug}`;
   const { rows: game } = await sql`SELECT * FROM Games WHERE gameid = ${params.slug} LIMIT 1`;
-  console.log("players: ", rows);
-  console.log("game: ", game[0] );
-  console.log(session)
+  // console.log("players: ", rows);
+  // console.log("game: ", game[0] );
+  // console.log(session)
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-cover bg-center">
@@ -48,7 +48,7 @@ export default async function Lobby( {params}: any ) {
 
             {rows.map((row) => (
 
-              <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" key={row.userid}>
+               <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" key={row.email}>
 
                 <th scope="row" className="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
                   <img className="w-10 h-10 rounded-full" src={row.image || "/placeholder.png"}  alt="profile-image" />
@@ -69,23 +69,21 @@ export default async function Lobby( {params}: any ) {
             </tbody>
         </table>
 
-        <div className="flex items-stretech lg:col-span-3 justify-center gap-3">
-          <div className="justify-center align-middle content-center">
-            { 
+        <div className="lg:col-span-3 w-full flex flex-col items-center justify-center">
+          
+            {/* join game if not already in game */
               !rows.some(row => row.email === session.user?.email) && game[0].gamestate == 'open' ? (
                 <JoinButton gameid={game[0].gameid} email={session.user?.email ?? ""} />
-              ) : (
-              <>
-                
-                  <p className="mb-4 self-auto">You are in the game</p>
-                
-              
-                <a href={"/game/" + params.slug} className="py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-full self-auto">
-                    Start Game
-                </a>
-              </>
-              )}
-          </div>
+              ) : <p className="mb-4">You are in the game</p> 
+            }
+
+            {/* start game if game is open and there are players // rows.length > 1 && */
+              game[0].gamestate == 'open' &&  rows.some(row => row.email === session.user?.email) ? (
+              <a href={"/game/" + params.slug} className="py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-full self-auto">
+                Start Game
+              </a> ) : <p className="mb-4 bg">Waiting for more players</p>
+            }
+
         </div>
 
 

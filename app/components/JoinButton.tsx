@@ -26,7 +26,7 @@ export default function JoinButton({ gameid, email }: { gameid: string, email: s
     <>
     
     <td className="px-6 py-4">
-      <button onClick={handleJoin} className='text-blue-500 hover:text-blue-700 text-sm'>
+      <button onClick={handleJoin} className='py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-full self-auto'>
         Join Game
       </button>
     </td>

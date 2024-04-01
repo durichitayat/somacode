@@ -20,8 +20,6 @@ export async function GET (request: Request) {
           FOREIGN KEY (email) REFERENCES Users(email),
           GameID UUID,
           FOREIGN KEY (GameID) REFERENCES Games(GameID),
-          PlayerName VARCHAR(50),
-          PlayerType VARCHAR(50),
           Winner BOOLEAN,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
