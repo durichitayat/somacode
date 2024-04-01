@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { useSession } from "next-auth/react"
 import Chat from "./Chat";
+import Footer from "@/app/components/Footer";
 
 export default function Game() {
   const { data: session, status } = useSession()
@@ -15,6 +16,7 @@ export default function Game() {
   
           <Chat /> 
   
+        <Footer />
       </main>
     );
   }

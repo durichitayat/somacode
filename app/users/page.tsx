@@ -6,6 +6,7 @@ import BlockButton from "../components/BlockButton";
 import DeleteButton from "../components/DeleteButton";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
+import Footer from "../components/Footer";
 
 export default async function Users({
   params
@@ -65,7 +66,7 @@ export default async function Users({
           <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
 
             {/* ROW Header */}
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th scope="col" className="p-4">
                   <div className="flex items-center">
@@ -123,7 +124,7 @@ export default async function Users({
           </table>
         </div>
         
-        <div></div>
+        <Footer />
 
         </main>
     </>

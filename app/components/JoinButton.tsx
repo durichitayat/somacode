@@ -22,6 +22,17 @@ export default function JoinButton({ gameid, email }: { gameid: string, email: s
     }
   };
 
+  // Before rendering the component, check if the data needed is available
+  if (!gameid || !email) {
+    return (
+      <td className="px-6 py-4">
+        <button className='py-2.5 px-5 text-white bg-gray-300 rounded-full self-auto'>
+          Checking...
+        </button>
+      </td>
+    ); // or a loading spinner, or some placeholder content
+  }
+
   return (
     <>
     

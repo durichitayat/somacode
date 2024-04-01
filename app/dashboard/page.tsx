@@ -6,6 +6,7 @@ import { sql } from "@vercel/postgres";
 import { unstable_noStore as noStore } from "next/cache";
 import NewGameButton from "../components/NewGameButton";
 import Link from "next/link";
+import Footer from "../components/Footer";
 
 export default async function Dashboard() {
 
@@ -28,7 +29,7 @@ export default async function Dashboard() {
 
       <div className="w-full mt-20">
         <table className="mx-auto text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 shadow-lg border">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
             <tr>
               <th scope="col" className="px-6 py-3">
                 Game
@@ -70,6 +71,8 @@ export default async function Dashboard() {
           </tbody>
         </table>
       </div>
+
+      <Footer />
 
     </main>
   );
