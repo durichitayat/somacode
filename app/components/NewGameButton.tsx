@@ -1,33 +1,45 @@
-"use client";
-import Link from "next/link";
+'use client'
+import React, { useState } from 'react';
 
-{ /* NewGameButton Component */ }
-export default function NewGameButton() {
+export default function NewGameButton( { session }: { session: any } ) {
+  const [gameName, setGameName] = useState('');
 
   const handleNewGame = async () => {
+    if (gameName !== '') {
     try {
       const response = await fetch('/api/lobby', {
-        method: 'GET',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: session.user.email,
+          gameName: gameName,
+        }),
       });
       const data = await response.json();
-      console.log(data.message);
+      const gameID = data.message;
+      console.log('New game created with ID:', gameID);
+
+      // Redirect to the new game lobby
+      window.location.replace(`/lobby/${gameID}`);
+      
     } catch (error) {
       console.error('An error occurred:', error);
+    }} else {
+      alert('Game name cannot be empty');
     }
   };
 
-  const createSlug = () => {
-    const timestamp = Date.now();
-    return '/game-lobby/' + timestamp;
-  }
-
   return (
     <>
-    
-    <Link href={'/game-lobby/1710806066771'} onClick={handleNewGame} className='text-green-500 hover:text-white-700'>
-      New Game
-    </Link>
+      <div className="relative">
+        <label htmlFor="game-name" className="sr-only">Game Name</label>
+        <input id="game-name" type='text' placeholder="Enter game name" className="w-full py-2.5 px-5 pr-32 text-black bg-white/80 border rounded-full outline-none focus:shadow-lg" onChange={(e) => setGameName(e.target.value)} required />
+        <button onClick={handleNewGame} className='absolute top-0 border border-l-2 border-l-gray-300 right-0 py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-r-full'>
+          New Game
+        </button>
+      </div>
     </>
   )
-
 }

@@ -6,6 +6,7 @@ import BlockButton from "../components/BlockButton";
 import DeleteButton from "../components/DeleteButton";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
+import Footer from "../components/Footer";
 
 export default async function Users({
   params
@@ -65,7 +66,7 @@ export default async function Users({
           <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
 
             {/* ROW Header */}
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th scope="col" className="p-4">
                   <div className="flex items-center">
@@ -93,7 +94,7 @@ export default async function Users({
 
             {rows.map((row) => (
 
-              <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" key={row.userid}>
+              <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" key={row.email}>
                 <td className="w-4 p-4">
                   <div className="flex items-center">
                     <input id="checkbox-table-search-1" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
@@ -101,7 +102,7 @@ export default async function Users({
                   </div>
                 </td>
                 <th scope="row" className="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
-                  <img className="w-10 h-10 rounded-full" src={row.image} alt="Jese image" />
+                  <img className="w-10 h-10 rounded-full" src={row.image} alt="profile-image" />
                   <div className="ps-3">
                     <div className="text-base font-semibold">{row.name}</div>
                     <div className="font-normal text-gray-500">{row.email}</div>
@@ -123,7 +124,7 @@ export default async function Users({
           </table>
         </div>
         
-        <div></div>
+        <Footer />
 
         </main>
     </>

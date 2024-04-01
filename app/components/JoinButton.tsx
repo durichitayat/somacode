@@ -1,29 +1,45 @@
 "use client";
-import Link from "next/link";
 
 { /* JoinButton Component */ }
-export default function JoinButton( params : { lobby: string }) {
+export default function JoinButton({ gameid, email }: { gameid: string, email: string}) {
 
   const handleJoin = async () => {
     try {
-      const response = await fetch('/api/lobby', {
+      const response = await fetch('/api/player', {
         method: 'POST',
-        body: JSON.stringify({ lobby: params.lobby }),
+        body: JSON.stringify({ 
+          gameid: gameid, 
+          email: email 
+        }),
       });
       const data = await response.json();
-      console.log(data.message);
+      console.log("player added: ", data.message);
+
+      window.location.replace(`/lobby/${gameid}`);
+      
     } catch (error) {
       console.error('An error occurred:', error);
     }
   };
 
+  // Before rendering the component, check if the data needed is available
+  if (!gameid || !email) {
+    return (
+      <td className="px-6 py-4">
+        <button className='py-2.5 px-5 text-white bg-gray-300 rounded-full self-auto'>
+          Checking...
+        </button>
+      </td>
+    ); // or a loading spinner, or some placeholder content
+  }
+
   return (
     <>
     
     <td className="px-6 py-4">
-      <Link href={'/game-lobby/1710806066771'} onClick={handleJoin} className='text-white-500 hover:text-green-700'>
+      <button onClick={handleJoin} className='py-2.5 px-5 text-white bg-pink-700 hover:bg-pink-600 rounded-full self-auto'>
         Join Game
-      </Link>
+      </button>
     </td>
     </>
   )

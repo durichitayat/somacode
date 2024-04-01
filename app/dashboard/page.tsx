@@ -1,10 +1,12 @@
-import Link from "next/link"; // Import Link from next/link
+/* eslint-disable @next/next/no-img-element */
+'use server'
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { sql } from "@vercel/postgres";
 import { unstable_noStore as noStore } from "next/cache";
-import JoinButton from "../components/JoinButton";
 import NewGameButton from "../components/NewGameButton";
+import Link from "next/link";
+import Footer from "../components/Footer";
 
 export default async function Dashboard() {
 
@@ -14,14 +16,7 @@ export default async function Dashboard() {
   }
 
   noStore()
-  const { rows } = await sql`SELECT * FROM Users`;
-
-  // Sample data for existing games (replace with actual data)
-  const existingGames = [
-    { id: 1, name: "Game 1" },
-    { id: 2, name: "Game 2" },
-    { id: 3, name: "Game 3" },
-  ];
+  const { rows } = await sql`SELECT * FROM Games`;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -30,27 +25,54 @@ export default async function Dashboard() {
       <h1 className="text-4xl mb-8">Dashboard</h1>
 
       {/* New Game button with Link */}
-      <NewGameButton/>
+      <NewGameButton session={session} />
 
-      <div className="w-full">
-        <table className="w-full border-collapse border rounded-lg">
-          <thead>
-            <tr className="bg-gray-200 text-gray-800">
-              <th className="border border-gray-400 px-4 py-2">Current Games</th>
-              <th className="border border-gray-400 px-4 py-2">Actions</th>
+      <div className="w-full mt-20">
+        <table className="mx-auto text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 shadow-lg border">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th scope="col" className="px-6 py-3">
+                Game
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Status
+              </th>
+              
             </tr>
           </thead>
+          
+
+          {/* ROWS */}
           <tbody>
-            {existingGames.map((game) => (
-              <tr key={game.id} className="text-center">
-                <td className="border border-gray-400 px-4 py-2">{game.name}</td>
-                {/* Join Game button with Link */}
-                <JoinButton lobby={game.name} />
-              </tr>
-            ))}
+
+          {rows.map((row) => (
+            <>
+              
+                <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600" key={row.gameid}>
+                  
+                  <th scope="row" className="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+                    
+                      <Link href={"/lobby/" + row.gameid} className="ps-3 flex flex-col" >
+                        <p className="text-base font-bold text-blue-700 hover:text-blue-800">{row.gamename}</p>
+                        <p className="text-xs font-light font-mono text-gray-300">{row.gameid}</p>
+                      </Link>
+                  
+                  </th>
+                  <td className="px-6 py-4">
+                    <div className="font-normal text-gray-500">{row.gamestate}</div>
+                  </td>
+
+                  
+                </tr>
+              
+            </>
+          ))}
+          
           </tbody>
         </table>
       </div>
+
+      <Footer />
 
     </main>
   );
