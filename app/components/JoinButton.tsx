@@ -9,7 +9,8 @@ export default function JoinButton({ gameid, email }: { gameid: string, email: s
         method: 'POST',
         body: JSON.stringify({ 
           gameid: gameid, 
-          email: email 
+          email: email,
+          remove: false
         }),
       });
       const data = await response.json();

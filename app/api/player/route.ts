@@ -12,13 +12,21 @@ export async function POST (request: Request) {
     console.log("request: ", request);  
 
     try {
-        const { gameid, email } = await request.json();
+        const { gameid, email, remove } = await request.json();
         console.log("gameid: ", gameid);
         console.log("email: ", email);
-        const result = await sql`
-            INSERT INTO Players (GameID, email) 
-            VALUES (${gameid}, ${email})`
-        return NextResponse.json({result}, {status: 200});
+        console.log("remove: ", remove);
+        if (remove) {
+            const result = await sql`
+                DELETE FROM Players
+                WHERE GameID = ${gameid} AND email = ${email}`
+            return NextResponse.json({result}, {status: 200});
+        } else {
+            const result = await sql`
+                INSERT INTO Players (GameID, email) 
+                VALUES (${gameid}, ${email})`
+            return NextResponse.json({result}, {status: 200});
+        }
     } catch (error) {
         return NextResponse.json({error}, {status: 500});
     }
