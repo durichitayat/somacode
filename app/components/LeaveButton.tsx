@@ -16,7 +16,7 @@ export default function LeaveButton({ gameid, email }: { gameid: string, email: 
       const data = await response.json();
       console.log("player removed: ", data.message);
 
-      window.location.replace(`/dashboard`);
+      window.location.reload();
       
     } catch (error) {
       console.error('An error occurred:', error);
