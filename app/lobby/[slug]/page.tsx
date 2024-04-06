@@ -6,7 +6,6 @@ import { sql } from "@vercel/postgres";
 import JoinButton from "@/app/components/JoinButton";
 import Footer from "@/app/components/Footer";
 import LeaveButton from "@/app/components/LeaveButton";
-import LeaveGameOnExit from "@/app/components/LeaveGameOnExit";
 
 export default async function Lobby( {params}: any ) {
   const session = await getServerSession();
@@ -80,8 +79,7 @@ export default async function Lobby( {params}: any ) {
               !rows.some(row => row.email === session.user?.email) && game[0].gamestate == 'open' ? (
                 <JoinButton gameid={game[0].gameid} email={session.user?.email ?? ""} />
               ) : <><p className="mb-4">You are in the game</p>
-              <LeaveButton gameid={game[0].gameid} email={session.user?.email ?? ""} />
-              {/*<LeaveGameOnExit gameid={game[0].gameid} email={session.user?.email ?? ""} />*/}</>
+              <LeaveButton gameid={game[0].gameid} email={session.user?.email ?? ""} /></>
             }
 
             {/* start game if game is open and there are players // rows.length > 1 && */
