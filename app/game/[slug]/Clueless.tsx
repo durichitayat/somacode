@@ -75,6 +75,7 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Your move goes here..."
           style={{ color: 'black' }}
+          disabled={true} // @todo: disable/enable chat based on if it's your turn or not
         />
         <button type="submit">Send</button>
       </form>

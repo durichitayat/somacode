@@ -26,9 +26,7 @@ export async function GET (request: Request) {
           TurnOrder INT,
           XCoord INT,
           YCoord INT,
-          Weapon INT,
-          Room INT,
-          Character INT
+          cards TEXT[][]
         )
       `
     console.log({table}, {status: 200});

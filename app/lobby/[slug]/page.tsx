@@ -82,8 +82,8 @@ export default async function Lobby( {params}: any ) {
               <LeaveButton gameid={game[0].gameid} email={session.user?.email ?? ""} /></>
             }
 
-            {/* start game if game is open and there are players // rows.length > 1 && */
-              game[0].gamestate == 'open' &&  rows.some(row => row.email === session.user?.email) ? (
+            {/* start game if game is open and there are players // rows.length > 2 && rows.length < 7 */
+              rows.some(row => row.email === session.user?.email) ? (
               <a href={"/game/" + params.slug} className="py-2.5 px-5 text-white bg-green-700 hover:bg-green-600 rounded-full self-auto">
                 Start Game
               </a> ) : <p className="mb-4 bg">Waiting for more players</p>
