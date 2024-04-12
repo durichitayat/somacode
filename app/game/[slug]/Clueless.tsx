@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function Clueless({ gameid, email }: { gameid: string, email: string }) {
+export default function Clueless({ gameid, email, cards }: { gameid: string, email: string, cards: string[][] }) {
   const [whoseTurn, setWhoseTurn] = useState<number>();
   const [yourMove, setYourMove] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
@@ -61,24 +61,50 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
   };
  
   return (
+<div className="flex items-start gap-8">
+  <div className="flex-1">
+    <h2>Your Cards</h2>
+    {cards.map((row, rowIndex) => (
+      <div key={rowIndex} className="flex flex-row">
+        <div className="flex-1">
+          {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => (
+            <div key={colIndex} className="border p-2">
+              {card}
+            </div>
+          ))}
+        </div>
+        <div className="flex-1">
+          {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => (
+            <div key={colIndex} className="border p-2">
+              {card}
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+  <div className="flex-1">
     <div>
-      <div>
-        {whoseTurn}
-      </div>
-      <div>
-        {yourMove}
-      </div>
-      <form onSubmit={handleMoveSubmit}>
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Your move goes here..."
-          style={{ color: 'black' }}
-          disabled={true} // @todo: disable/enable chat based on if it's your turn or not
-        />
-        <button type="submit">Send</button>
-      </form>
+      {whoseTurn}
     </div>
+    <div>
+      {yourMove}
+    </div>
+    <form onSubmit={handleMoveSubmit}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Your move goes here..."
+        style={{ color: 'black' }}
+        disabled={true} // @todo: disable/enable chat based on if it's your turn or not
+      />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+</div>
+
+
+
   );
 };
