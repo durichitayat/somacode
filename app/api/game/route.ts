@@ -22,12 +22,15 @@ export async function POST (request: Request) {
 
   try {
     const { gameid, email, playerMove }: GameRequestBody = await request.json();
-    console.log("gameid: ", gameid);
     console.log("email: ", email);
     console.log("playerMove: ", playerMove);
     if (email.toLowerCase() === "fetchstatus" && playerMove.toLowerCase() === "fetchstatus") {
       const { rows: turnCount } = await sql`SELECT turncount FROM Games WHERE gameid = ${gameid} LIMIT 1`;
-      return NextResponse.json(turnCount[0].turncount, {status: 200});
+      const playerCoordsRet = await getAllPlayerCoords(gameid);
+      return NextResponse.json({ turnCount: turnCount[0].turncount, playerCoords: playerCoordsRet }, {status: 200});
+    }
+    if (playerMove.toLowerCase() === "right") {
+      await setSinglePlayerCoords(email, [4, 4], gameid)
     }
     const { rows: turnCount } = await sql`UPDATE Games
                                         SET turncount = turncount + 1
@@ -66,7 +69,7 @@ export async function PUT (request: Request) {
       // console.log("Solution Cards:", solutionCards);
       // console.log("Player Cards:", playerCards);
 
-      await updatePlayerCards(playerEmails, playerCards);
+      await setPlayerCards(playerEmails, playerCards);
       // console.log('Player cards dealt successfully.');
 
       // this will work once Duri can delete the games table and we update it with create-games-table
@@ -75,11 +78,17 @@ export async function PUT (request: Request) {
       // const solutionCardsRet = await getSolutionCards(gameid);
       // console.log('Solution cards returned from db:', solutionCardsRet);
 
+      const playerRooms = getRandomRooms(playerCount);
+      await setPlayerCoords(playerEmails, playerRooms, gameid);
+
     }
 
-    // fetch the cards at $email and return them to the game component
+    // fetch the cards at $email plus player locations and return them to the game component
     const playerCardsRet = await getPlayerCards(email);
-    return NextResponse.json(playerCardsRet, {status: 200});
+    const playerCoordsRet = await getAllPlayerCoords(gameid);
+    console.log('playerCardsRet', playerCardsRet)
+    console.log('playerCoordsRet', playerCoordsRet)
+    return NextResponse.json({ playerCards: playerCardsRet, playerCoords: playerCoordsRet }, { status: 200 });
 
   } catch (error) {
     return NextResponse.json({error}, {status: 500});
@@ -110,6 +119,33 @@ const allClueCards: string[][] = [
   ['Room', 'Hall'],
   ['Room', 'Study']
 ];
+
+const hallways: number[][] = [
+  [1, 0],
+  [3, 0],
+  [0, 1],
+  [2, 1],
+  [4, 1],
+  [1, 2],
+  [3, 2],
+  [0, 3],
+  [2, 3],
+  [4, 3],
+  [1, 4],
+  [3, 4]
+]
+
+const rooms: number[][] = [
+  [0, 0],
+  [2, 0],
+  [4, 0],
+  [0, 2],
+  [2, 2],
+  [4, 2],
+  [0, 4],
+  [2, 4],
+  [4, 4]
+]
 
 function shuffleArray(array: string[][]): string[][] {
   const shuffledArray = array.slice();
@@ -208,7 +244,7 @@ export async function getPlayerCards(email: string): Promise<string[][]> {
   }
 }
 
-export async function updatePlayerCards(playerEmails: string[], playerCards: string[][][]): Promise<void> {
+export async function setPlayerCards(playerEmails: string[], playerCards: string[][][]): Promise<void> {
 
   try {
     let i = 0;
@@ -277,4 +313,80 @@ export async function getSolutionCards(gameid: string): Promise<string[][]> {
     console.error('An error occurred:', error);
     throw error
   }
+}
+
+function getRandomRooms(playerCount: number): number[][] {
+  // Shuffle the rooms array to randomize the selection
+  const shuffledRooms = rooms.sort(() => Math.random() - 0.5);
+
+  // Return the specified number of room combinations
+  return shuffledRooms.slice(0, playerCount);
+}
+
+export async function setSinglePlayerCoords(email: string, room: number[], gameid: string): Promise<void> {
+
+  try {
+    await sql`
+      UPDATE Players
+      SET XCoord = ${room[0]}, YCoord = ${room[1]}
+      WHERE email = ${email} AND gameid = ${gameid}`;
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+
+}
+
+export async function setPlayerCoords(playerEmails: string[], playerRooms: number[][], gameid: string): Promise<void> {
+
+  try {
+    if (playerEmails.length !== playerRooms.length) {
+      throw new Error('Player emails and rooms arrays must have the same length');
+    }
+
+    let i = 0;
+    for (const email of playerEmails) {
+      await sql`
+        UPDATE Players
+        SET XCoord = ${playerRooms[i][0]}, YCoord = ${playerRooms[i][1]}
+        WHERE email = ${email} AND gameid = ${gameid}`;
+
+      i++;
+      }
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+  
+}
+
+export async function getAllPlayerCoords(gameid: string): Promise<{ [email: string]: number[][] }> {
+
+  try {
+    const playerCoords: { [email: string]: number[][] } = {};
+
+    const playerData = await sql`
+      SELECT email, XCoord, YCoord
+      FROM Players
+      WHERE gameid = ${gameid}`;
+
+    for (const row of playerData.rows) {
+      const email = row.email
+      const XCoord = row.xcoord
+      const YCoord = row.ycoord
+
+      if (!playerCoords[email]) {
+        playerCoords[email] = [];
+      }
+
+      playerCoords[email].push([XCoord, YCoord]);
+    }
+
+    return playerCoords;
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+  
 }

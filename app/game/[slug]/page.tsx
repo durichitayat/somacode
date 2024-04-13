@@ -10,7 +10,8 @@ export default async function Game( {params}: any ) {
     redirect("/api/auth/signin")
   }
 
-  let fetchedCards = []; // Declare fetchedCards outside try block
+  let fetchedCards: any[] = [];
+  let fetchedPlayerCoords: { [email: string]: number[][] } = {};
 
   // get player cards, set player cards if you're the host
   try {
@@ -21,8 +22,17 @@ export default async function Game( {params}: any ) {
         email: session.user?.email ?? "",
       }),
     });
-    fetchedCards = await response.json();
-    console.log("player cards: ", fetchedCards);
+
+    const responseData = await response.json();
+    const fetchedCardsData = responseData.playerCards;
+    const fetchedPlayerCoordsData = responseData.playerCoords;
+
+    fetchedCards = fetchedCardsData;
+    fetchedPlayerCoords = fetchedPlayerCoordsData;
+
+    console.log("Player Cards:", fetchedCards);
+    console.log("Player Coords:", fetchedPlayerCoords);
+    
   } catch (error) {
     console.error('An error occurred:', error);
   }
@@ -33,7 +43,12 @@ export default async function Game( {params}: any ) {
       
       <h1 className="text-4xl dark:text-white mb-8">Welcome to the text-based Clueless experience</h1>
 
-        <Clueless gameid={params.slug} email={session.user?.email ?? ""} cards={fetchedCards}/> 
+      <Clueless
+        gameid={params.slug}
+        email={session.user?.email ?? ""}
+        cards={fetchedCards}
+        playerCoords={fetchedPlayerCoords}
+      />
 
       <Footer />
     </main>
