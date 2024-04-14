@@ -24,9 +24,6 @@ export async function POST (request: Request) {
       INSERT INTO Games (
         GameName,
         GameOwner,
-        MurdererID, 
-        MurderWeaponID, 
-        MurderRoomID, 
         GameState, 
         StartTime, 
         EndTime, 
@@ -36,9 +33,6 @@ export async function POST (request: Request) {
       VALUES (
         ${gameName},
         ${email},
-        ${murdererID}, 
-        ${murderWeaponID}, 
-        ${murderRoomID}, 
         ${gameState}, 
         NOW(), 
         NULL, 
