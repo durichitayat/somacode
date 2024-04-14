@@ -110,7 +110,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
       Player's turn: {whoseTurn}
     </div>
     <div>
-      {serverResponse}
+      Server: {serverResponse}
     </div>
   </div>
   

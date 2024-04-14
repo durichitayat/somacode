@@ -34,7 +34,7 @@ export async function POST (request: Request) { // this will contain most game l
       return NextResponse.json({ currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, {status: 200});
     }
 
-    // if it's not their turn, kill them
+    // if it's not their turn, tell them so
     if (!(await isPlayerTurn(gameid, email))) {
       const { rows: CurrentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
       const playerCoordsRet = await getAllPlayerCoords(gameid);
@@ -44,7 +44,7 @@ export async function POST (request: Request) { // this will contain most game l
         WHERE gameid = ${gameid}
         AND TurnOrder = ${CurrentTurn[0].currentturn}
         LIMIT 1;`;
-      return NextResponse.json({ result: "not your turn silly boy", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, {status: 200});
+      return NextResponse.json({ result: "Sorry, it's not your turn.", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, {status: 200});
     }
 
     const moveResult = await processMove(playerMove.toLowerCase(), email, gameid);
@@ -70,13 +70,17 @@ export async function POST (request: Request) { // this will contain most game l
         currentTurn = updatedTurn[0].currentturn;
       }
       const playerCoordsRet = await getAllPlayerCoords(gameid);
+
+      // Priyanka: don't iterate the turn just yet. check to see if player is in the room. if so, tell them that they can make a suggestion
+      
+
       const { rows: playerEmail } = await sql`
         SELECT email
         FROM Players
         WHERE gameid = ${gameid}
         AND TurnOrder = ${currentTurn}
         LIMIT 1;`;
-      return NextResponse.json({ result: "success", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, { status: 200 });
+      return NextResponse.json({ result: "Success.", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, { status: 200 });
     }
 
     // if move is invalid
@@ -88,7 +92,7 @@ export async function POST (request: Request) { // this will contain most game l
         WHERE gameid = ${gameid}
         AND TurnOrder = ${CurrentTurn[0].currentturn}
         LIMIT 1;`;
-    return NextResponse.json({ result: "invalid move", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, { status: 200 });
+    return NextResponse.json({ result: "Sorry, invalid move. Try again.", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, { status: 200 });
 
   } catch (error) {
     console.log(error)
