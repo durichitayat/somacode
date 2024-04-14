@@ -23,24 +23,75 @@ export async function POST (request: Request) { // this will contain most game l
     // if it's a fetchStatus call (representing a 5 sec refresh), return the turn count and all player locations
     // @todo change it so that we don't have to send all player locations, only the most recent. also maybe put everyone on the same 5 sec clock?
     if (email.toLowerCase() === "fetchstatus" && playerMove.toLowerCase() === "fetchstatus") {
-      const { rows: turnCount } = await sql`SELECT turncount FROM Games WHERE gameid = ${gameid} LIMIT 1`;
+      const { rows: CurrentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
       const playerCoordsRet = await getAllPlayerCoords(gameid);
-      return NextResponse.json({ turnCount: turnCount[0].turncount, playerCoords: playerCoordsRet }, {status: 200});
+      const { rows: playerEmail } = await sql`
+        SELECT email
+        FROM Players
+        WHERE gameid = ${gameid}
+        AND TurnOrder = ${CurrentTurn[0].currentturn}
+        LIMIT 1;`;
+      return NextResponse.json({ currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, {status: 200});
+    }
+
+    // if it's not their turn, kill them
+    if (!(await isPlayerTurn(gameid, email))) {
+      const { rows: CurrentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
+      const playerCoordsRet = await getAllPlayerCoords(gameid);
+      const { rows: playerEmail } = await sql`
+        SELECT email
+        FROM Players
+        WHERE gameid = ${gameid}
+        AND TurnOrder = ${CurrentTurn[0].currentturn}
+        LIMIT 1;`;
+      return NextResponse.json({ result: "not your turn silly boy", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, {status: 200});
     }
 
     const moveResult = await processMove(playerMove.toLowerCase(), email, gameid);
-    
-    
-    const { rows: turnCount } = await sql`UPDATE Games
-                                        SET turncount = turncount + 1
-                                        WHERE gameid = ${gameid}
-                                        RETURNING turncount`;
-    let turnCountVal: number = turnCount[0].turncount
-    let turnCountStr: string = turnCountVal.toString();
+    if (moveResult) { // if move is valid
+      const { rows: updatedTurn } = await sql`
+        WITH updated AS (
+          UPDATE Games
+          SET CurrentTurn = CurrentTurn + 1
+          WHERE gameid = ${gameid}
+          RETURNING CurrentTurn, TurnCount
+        )
+        SELECT CurrentTurn, TurnCount
+        FROM updated;
+      `;
+      let currentTurn = updatedTurn[0].currentturn;
+      if (updatedTurn[0].currentturn > updatedTurn[0].turncount) { // reset currentTurn to 1 for starting over vat first player
+        const { rows: updatedTurn } = await sql`
+          UPDATE Games
+          SET CurrentTurn = 1
+          WHERE gameid = ${gameid}
+          RETURNING CurrentTurn;
+        `;
+        currentTurn = updatedTurn[0].currentturn;
+      }
+      const playerCoordsRet = await getAllPlayerCoords(gameid);
+      const { rows: playerEmail } = await sql`
+        SELECT email
+        FROM Players
+        WHERE gameid = ${gameid}
+        AND TurnOrder = ${currentTurn}
+        LIMIT 1;`;
+      return NextResponse.json({ result: "success", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, { status: 200 });
+    }
+
+    // if move is invalid
+    const { rows: CurrentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
     const playerCoordsRet = await getAllPlayerCoords(gameid);
-    return NextResponse.json({ turnCount: turnCountStr, playerCoords: playerCoordsRet }, { status: 200 });
+    const { rows: playerEmail } = await sql`
+        SELECT email
+        FROM Players
+        WHERE gameid = ${gameid}
+        AND TurnOrder = ${CurrentTurn[0].currentturn}
+        LIMIT 1;`;
+    return NextResponse.json({ result: "invalid move", currentTurn: playerEmail[0].email, playerCoords: playerCoordsRet }, { status: 200 });
 
   } catch (error) {
+    console.log(error)
     return NextResponse.json({error}, {status: 500});
   }
 
@@ -55,22 +106,24 @@ export async function PUT (request: Request) {
     // if this is host, then set up everyone's turn order and distribute cards
     const { rows: game } = await sql`SELECT * FROM Games WHERE gameid = ${gameid} LIMIT 1`;
     if ((game[0].gameowner === email ?? "") && game[0].gamestate == 'open') {
-      
-      // close the game state, disabled for testing. change 'open' to 'closed' to enable
-      await sql`
-        UPDATE Games
-        SET GameState = 'open'
-        WHERE GameID = ${gameid}`;
 
       const { playerCount, playerEmails } = await getPlayerCountEmails(gameid);
       // console.log('Player Count:', playerCount);
       // console.log('Player Emails:', playerEmails);
+
+      // close the game state, disabled for testing. change 'open' to 'closed' to enable
+      // also set TurnCount to the playerCount
+      await sql`
+        UPDATE Games
+        SET GameState = 'open', TurnCount = ${playerCount}
+        WHERE GameID = ${gameid}`;
 
       const { solutionCards, playerCards } = distributeClueCards(playerCount, allClueCards);
       // console.log("Solution Cards:", solutionCards);
       // console.log("Player Cards:", playerCards);
 
       await setPlayerCards(playerEmails, playerCards);
+      await setPlayerTurns(playerEmails);
       // console.log('Player cards dealt successfully.');
 
       // this will work once Duri can delete the games table and we update it with create-games-table
@@ -283,6 +336,24 @@ export async function setPlayerCards(playerEmails: string[], playerCards: string
 
 }
 
+export async function setPlayerTurns(playerEmails: string[]): Promise<void> {
+
+  try {
+    let i = 1;
+    for (const email of playerEmails) {
+      await sql`
+        UPDATE Players
+        SET TurnOrder = ${i}
+        WHERE email = ${email}`
+      i++;
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+
+}
+
 export async function setSolutionCards(gameid: string, solutionCards: string[][]): Promise<void> {
 
   try {
@@ -441,7 +512,7 @@ export async function processMove(playerMove: string, email: string, gameid: str
       !(await isCellOccupied(gameid, [playerCoords[0][0], playerCoords[0][1] + 1]))
     ) {
       await setSinglePlayerCoords(email, [playerCoords[0][0], playerCoords[0][1] + 1], gameid);
-      return true
+      return true;
     }
     if (
       playerMove === "left" &&
@@ -488,9 +559,47 @@ export async function isCellOccupied(gameid: string, targetCoord: number[]): Pro
 
     const count = playerData.rows[0].count;
     const isOccupied = count > 0;
-    console.log(isOccupied)
 
     return isOccupied;
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
+export async function isPlayerTurn(gameid: string, email: string): Promise<boolean> {
+  try {
+    // Get the player's turn order
+    const { rows: playerTurnOrder } = await sql`
+      SELECT turnorder
+      FROM Players
+      WHERE gameid = ${gameid} AND email = ${email}
+      LIMIT 1;
+    `;
+    
+    if (playerTurnOrder.length === 0) {
+      throw new Error(`Player with email ${email} not found in game with ID ${gameid}`);
+    }
+    
+    const turnorder = playerTurnOrder[0].turnorder;
+
+    // Get the current turn from the game
+    const { rows: currentTurn } = await sql`
+      SELECT currentturn
+      FROM Games
+      WHERE gameid = ${gameid}
+      LIMIT 1;
+    `;
+    
+    if (currentTurn.length === 0) {
+      throw new Error(`Game with ID ${gameid} not found`);
+    }
+    
+    const gameCurrentTurn = currentTurn[0].currentturn;
+
+    // Check if player's turn matches game's current turn
+    return gameCurrentTurn === turnorder;
+
   } catch (error) {
     console.error('An error occurred:', error);
     throw error;

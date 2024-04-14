@@ -30,7 +30,7 @@ export async function POST (request: Request) {
         GameState, 
         StartTime, 
         EndTime, 
-        TurnCount, 
+        CurrentTurn,
         SolutionRevealed
       ) 
       VALUES (
@@ -42,7 +42,7 @@ export async function POST (request: Request) {
         ${gameState}, 
         NOW(), 
         NULL, 
-        0, 
+        1,
         FALSE
       )
       RETURNING *

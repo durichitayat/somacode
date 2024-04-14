@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 export default function Clueless({ gameid, email, cards, playerCoordsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] } }) {
   const [whoseTurn, setWhoseTurn] = useState<number>();
-  const [yourMove, setYourMove] = useState<string>('');
+  const [serverResponse, setServerResponse] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
   const [playerCoords, setPlayerCoords] = useState<{ [email: string]: number[][] }>(playerCoordsInp);
 
@@ -18,7 +18,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
         }),
       });
       const responseData = await response.json();
-      const fetchedTurnData = responseData.turnCount;
+      const fetchedTurnData = responseData.currentTurn;
       const fetchedPlayerCoordsData = responseData.playerCoords;
       setPlayerCoords(fetchedPlayerCoordsData);
       setWhoseTurn(() => fetchedTurnData);
@@ -53,13 +53,17 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
           playerMove: inputValue
         }),
       });
-      const data = await response.json();
-      console.log("server response: ", data);
-      setYourMove(() => "Your move: " + inputValue + " Server response: " + data);
+      const responseData = await response.json();
+      const fetchedTurnData = responseData.currentTurn;
+      const fetchedPlayerCoordsData = responseData.playerCoords;
+      const fetchedServerResponse = responseData.result;
+      setPlayerCoords(fetchedPlayerCoordsData);
+      setWhoseTurn(() => fetchedTurnData);
+      setServerResponse(() => fetchedServerResponse);
       setInputValue('');
     } catch (error) {
       console.error('An error occurred:', error);
-      setYourMove(() => 'An error occurred: ' + error);
+      setServerResponse(() => 'An error occurred: ' + error);
       setInputValue('');
     }
   };
@@ -103,10 +107,10 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
     </form>
 
     <div className="mt-4">
-      {whoseTurn}
+      Player's turn: {whoseTurn}
     </div>
     <div>
-      {yourMove}
+      {serverResponse}
     </div>
   </div>
   
