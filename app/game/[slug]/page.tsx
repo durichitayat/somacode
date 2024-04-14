@@ -30,8 +30,8 @@ export default async function Game( {params}: any ) {
     fetchedCards = fetchedCardsData;
     fetchedPlayerCoords = fetchedPlayerCoordsData;
 
-    console.log("Player Cards:", fetchedCards);
-    console.log("Player Coords:", fetchedPlayerCoords);
+    // console.log("Player Cards:", fetchedCards);
+    // console.log("Player Coords:", fetchedPlayerCoords);
     
   } catch (error) {
     console.error('An error occurred:', error);
@@ -47,7 +47,7 @@ export default async function Game( {params}: any ) {
         gameid={params.slug}
         email={session.user?.email ?? ""}
         cards={fetchedCards}
-        playerCoords={fetchedPlayerCoords}
+        playerCoordsInp={fetchedPlayerCoords}
       />
 
       <Footer />

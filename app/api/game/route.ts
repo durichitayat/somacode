@@ -12,33 +12,34 @@ import { NextResponse } from 'next/server';
   * So every call to this API must contain the gameid, email (user intentifier), and playerMove (gives insight into the player's move)
   ***************/}
 
-type GameRequestBody = {
-  gameid: string;
-  email: string;
-  playerMove: string;
-};
-
-export async function POST (request: Request) {
+export async function POST (request: Request) { // this will contain most game logic so keep it tidy! functions wherever you can
 
   try {
+
+    // get player move info
     const { gameid, email, playerMove }: GameRequestBody = await request.json();
-    console.log("email: ", email);
-    console.log("playerMove: ", playerMove);
+    console.log("email: ", email, "playerMove: ", playerMove);
+
+    // if it's a fetchStatus call (representing a 5 sec refresh), return the turn count and all player locations
+    // @todo change it so that we don't have to send all player locations, only the most recent. also maybe put everyone on the same 5 sec clock?
     if (email.toLowerCase() === "fetchstatus" && playerMove.toLowerCase() === "fetchstatus") {
       const { rows: turnCount } = await sql`SELECT turncount FROM Games WHERE gameid = ${gameid} LIMIT 1`;
       const playerCoordsRet = await getAllPlayerCoords(gameid);
       return NextResponse.json({ turnCount: turnCount[0].turncount, playerCoords: playerCoordsRet }, {status: 200});
     }
-    if (playerMove.toLowerCase() === "right") {
-      await setSinglePlayerCoords(email, [4, 4], gameid)
-    }
+
+    const moveResult = await processMove(playerMove.toLowerCase(), email, gameid);
+    
+    
     const { rows: turnCount } = await sql`UPDATE Games
                                         SET turncount = turncount + 1
                                         WHERE gameid = ${gameid}
                                         RETURNING turncount`;
     let turnCountVal: number = turnCount[0].turncount
     let turnCountStr: string = turnCountVal.toString();
-    return NextResponse.json(turnCountStr, {status: 200});
+    const playerCoordsRet = await getAllPlayerCoords(gameid);
+    return NextResponse.json({ turnCount: turnCountStr, playerCoords: playerCoordsRet }, { status: 200 });
+
   } catch (error) {
     return NextResponse.json({error}, {status: 500});
   }
@@ -86,8 +87,8 @@ export async function PUT (request: Request) {
     // fetch the cards at $email plus player locations and return them to the game component
     const playerCardsRet = await getPlayerCards(email);
     const playerCoordsRet = await getAllPlayerCoords(gameid);
-    console.log('playerCardsRet', playerCardsRet)
-    console.log('playerCoordsRet', playerCoordsRet)
+    // console.log('playerCardsRet', playerCardsRet)
+    // console.log('playerCoordsRet', playerCoordsRet)
     return NextResponse.json({ playerCards: playerCardsRet, playerCoords: playerCoordsRet }, { status: 200 });
 
   } catch (error) {
@@ -95,6 +96,12 @@ export async function PUT (request: Request) {
   }
 
 }
+
+type GameRequestBody = {
+  gameid: string;
+  email: string;
+  playerMove: string;
+};
 
 const allClueCards: string[][] = [
   ['Weapon', 'Revolver'],
@@ -145,6 +152,13 @@ const rooms: number[][] = [
   [0, 4],
   [2, 4],
   [4, 4]
+]
+
+const blankSpaces: number[][] = [
+  [1, 1],
+  [3, 1], 
+  [1, 3],
+  [3, 3]
 ]
 
 function shuffleArray(array: string[][]): string[][] {
@@ -389,4 +403,96 @@ export async function getAllPlayerCoords(gameid: string): Promise<{ [email: stri
     throw error;
   }
   
+}
+
+export async function getPlayerCoords(email: string, gameid: string): Promise<number[][]> {
+  try {
+    const playerCoords: number[][] = [];
+
+    const playerData = await sql`
+      SELECT XCoord, YCoord
+      FROM Players
+      WHERE gameid = ${gameid} AND email = ${email}`;
+
+    for (const row of playerData.rows) {
+      const XCoord: number = row.xcoord;
+      const YCoord: number = row.ycoord;
+      playerCoords.push([XCoord, YCoord]);
+    }
+
+    return playerCoords;
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
+// if the move is allowed and the spot exists, it will execute the move and return true. otherwise, false
+export async function processMove(playerMove: string, email: string, gameid: string): Promise<boolean> {
+  try {
+
+    const playerCoords = await getPlayerCoords(email, gameid);
+    
+    if (
+      playerMove === "right" &&
+      playerCoords[0][1] + 1 <= 4 &&
+      !blankSpaces.some(coord => coord[0] === playerCoords[0][0] && coord[1] === playerCoords[0][1] + 1) &&
+      !(await isCellOccupied(gameid, [playerCoords[0][0], playerCoords[0][1] + 1]))
+    ) {
+      await setSinglePlayerCoords(email, [playerCoords[0][0], playerCoords[0][1] + 1], gameid);
+      return true
+    }
+    if (
+      playerMove === "left" &&
+      playerCoords[0][1] - 1 >= 0 &&
+      !blankSpaces.some(coord => coord[0] === playerCoords[0][0] && coord[1] === playerCoords[0][1] - 1) &&
+      !(await isCellOccupied(gameid, [playerCoords[0][0], playerCoords[0][1] - 1]))
+    ) {
+      await setSinglePlayerCoords(email, [playerCoords[0][0], playerCoords[0][1] - 1], gameid);
+      return true;
+    }    
+    if (
+      playerMove === "up" &&
+      playerCoords[0][0] - 1 >= 0 &&
+      !blankSpaces.some(coord => coord[0] === playerCoords[0][0] - 1 && coord[1] === playerCoords[0][1]) &&
+      !(await isCellOccupied(gameid, [playerCoords[0][0] - 1, playerCoords[0][1]]))
+    ) {
+      await setSinglePlayerCoords(email, [playerCoords[0][0] - 1, playerCoords[0][1]], gameid);
+      return true;
+    }    
+    if (
+      playerMove === "down" &&
+      playerCoords[0][0] + 1 <= 4 &&
+      !blankSpaces.some(coord => coord[0] === playerCoords[0][0] + 1 && coord[1] === playerCoords[0][1]) &&
+      !(await isCellOccupied(gameid, [playerCoords[0][0] + 1, playerCoords[0][1]]))
+    ) {
+      await setSinglePlayerCoords(email, [playerCoords[0][0] + 1, playerCoords[0][1]], gameid);
+      return true;
+    }    
+
+    return false;
+  } catch (error) {
+    // Handle any errors that might occur during processing
+    console.error("Error processing move:", error);
+    throw new Error("Error processing move");
+  }
+}
+
+export async function isCellOccupied(gameid: string, targetCoord: number[]): Promise<boolean> {
+  try {
+    const playerData = await sql`
+      SELECT COUNT(*)
+      FROM Players
+      WHERE gameid = ${gameid} AND XCoord = ${targetCoord[0]} AND YCoord = ${targetCoord[1]}`;
+
+    const count = playerData.rows[0].count;
+    const isOccupied = count > 0;
+    console.log(isOccupied)
+
+    return isOccupied;
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
 }

@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function Clueless({ gameid, email, cards, playerCoords }: { gameid: string, email: string, cards: string[][], playerCoords: { [email: string]: number[][] } }) {
+export default function Clueless({ gameid, email, cards, playerCoordsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] } }) {
   const [whoseTurn, setWhoseTurn] = useState<number>();
   const [yourMove, setYourMove] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
+  const [playerCoords, setPlayerCoords] = useState<{ [email: string]: number[][] }>(playerCoordsInp);
 
   const fetchStatus = async () => {
     try {
@@ -17,9 +18,9 @@ export default function Clueless({ gameid, email, cards, playerCoords }: { gamei
         }),
       });
       const responseData = await response.json();
-      const fetchedTurnData = responseData.playerCards;
+      const fetchedTurnData = responseData.turnCount;
       const fetchedPlayerCoordsData = responseData.playerCoords;
-      playerCoords = fetchedPlayerCoordsData;
+      setPlayerCoords(fetchedPlayerCoordsData);
       setWhoseTurn(() => fetchedTurnData);
       setInputValue('');
     } catch (error) {
