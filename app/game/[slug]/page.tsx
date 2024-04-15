@@ -12,6 +12,7 @@ export default async function Game( {params}: any ) {
 
   let fetchedCards: any[] = [];
   let fetchedPlayerCoords: { [email: string]: number[][] } = {};
+  let fetchedPlayerCharacters: { [email: string]: string } = {};
 
   // get player cards, set player cards if you're the host
   try {
@@ -26,9 +27,11 @@ export default async function Game( {params}: any ) {
     const responseData = await response.json();
     const fetchedCardsData = responseData.playerCards;
     const fetchedPlayerCoordsData = responseData.playerCoords;
+    const fetchedPlayerCharactersData = responseData.playerCharacters;
 
     fetchedCards = fetchedCardsData;
     fetchedPlayerCoords = fetchedPlayerCoordsData;
+    fetchedPlayerCharacters = fetchedPlayerCharactersData;
 
     // console.log("Player Cards:", fetchedCards);
     // console.log("Player Coords:", fetchedPlayerCoords);
@@ -48,6 +51,7 @@ export default async function Game( {params}: any ) {
         email={session.user?.email ?? ""}
         cards={fetchedCards}
         playerCoordsInp={fetchedPlayerCoords}
+        playerCharsInp={fetchedPlayerCharacters}
       />
 
       <Footer />

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function Clueless({ gameid, email, cards, playerCoordsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] } }) {
+export default function Clueless({ gameid, email, cards, playerCoordsInp, playerCharsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] }, playerCharsInp: { [email: string]: string } }) {
   const [whoseTurn, setWhoseTurn] = useState<string>();
   const [serverResponse, setServerResponse] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
@@ -31,6 +31,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
   }
 
   useEffect(() => {
+    fetchStatus();
     const intervalId = setInterval(fetchStatus, 5000);
 
     // Clear the interval on component unmount or before creating a new interval
@@ -71,7 +72,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
   return (
 <div className="flex items-start gap-8">
   <div className="w-96">
-    <h2>Your Cards</h2>
+    <h2>Your Cards:</h2>
     {cards.map((row, rowIndex) => (
       <div key={rowIndex} className="flex flex-row">
         <div className="w-48">
@@ -90,7 +91,19 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
         </div>
       </div>
     ))}
-    
+
+    <h2>Players:</h2>
+    {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
+      <div key={rowIndex} className="flex flex-row">
+        <div className="w-48 border p-2">
+          <div className="truncate">{email}</div>
+        </div>
+        <div className="w-48 border p-2">
+          <div>{character}</div>
+        </div>
+      </div>
+    ))}
+
     <form onSubmit={handleMoveSubmit} className="mt-4">
       <input
         type="text"
@@ -118,7 +131,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
   <div className="grid grid-cols-5 gap-2"> {/* 2 times wider grid */}
   {Array.from({ length: 25 }, (_, index) => {
     const coords = findCoords(index);
-    const email = getEmailForCoords(coords, playerCoords);
+    const emails = getEmailsFromCoords(coords, playerCoords);
 
     if (index === 6 || index === 8 || index === 16 || index === 18) {
       return (
@@ -133,7 +146,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
           style={{ height: '32px', borderTopWidth: '16px', borderBottomWidth: '16px' }}
         >
           {/* Render your game board cell content here */}
-          {email !== null && email !== undefined ? email : ""}
+          {emails.length > 0 ? emails.join(', ') : ""}
         </div>
       );
     }
@@ -145,14 +158,14 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
           style={{ height: '64px', borderLeftWidth: '16px', borderRightWidth: '16px' }}
         >
           {/* Render your game board cell content here */}
-          {email !== null && email !== undefined ? email : ""}
+          {emails.length > 0 ? emails.join(', ') : ""}
         </div>
       );
     }
     return (
       <div key={index} className="border p-12 text-center">
         {/* Render your game board cell content here */}
-        {email !== null && email !== undefined ? email : ""}
+        {emails.length > 0 ? emails.join(', ') : ""}
       </div>
     );
   })}
@@ -180,21 +193,24 @@ function findCoords(index: number): [number, number] {
   return [row, col];
 }
 
-// Function to get the email associated with the coordinates
-function getEmailForCoords(coords: [number, number], playerCoords: { [email: string]: number[][] }): string | null {
+// Function to get the emails associated with the coordinates
+function getEmailsFromCoords(coords: [number, number], playerCoords: { [email: string]: number[][] }): string[] {
+  const [row, col] = coords;
+  const emails: string[] = [];
+
   if (!playerCoords) {
-    return null;
+    return emails;
   }
 
-  const [row, col] = coords;
   for (const [email, coordsList] of Object.entries(playerCoords)) {
     if (!coordsList) {
       continue;
     }
 
     if (coordsList.some(coord => coord[0] === row && coord[1] === col)) {
-      return email;
+      emails.push(email);
     }
   }
-  return null;
+
+  return emails;
 }

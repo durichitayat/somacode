@@ -69,6 +69,7 @@ export async function POST (request: Request) { // this will contain most game l
       }
 
       await setGameStatus(gameid, 'accuse?');
+      playerCoords = await getAllPlayerCoords(gameid);
       return NextResponse.json({ result: suggestionResult + "Would you like to make an accusation? Give it in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
     }
 
@@ -153,7 +154,8 @@ export async function PUT (request: Request) {
     // fetch the cards at $email plus player locations and return them to the game component
     const playerCardsRet = await getPlayerCards(email);
     const playerCoordsRet = await getAllPlayerCoords(gameid);
-    return NextResponse.json({ playerCards: playerCardsRet, playerCoords: playerCoordsRet }, { status: 200 });
+    const playerCharactersRet = await fetchPlayersWithCharacters(gameid);
+    return NextResponse.json({ playerCards: playerCardsRet, playerCoords: playerCoordsRet, playerCharacters : playerCharactersRet }, { status: 200 });
 
   } catch (error) {
     return NextResponse.json({error}, {status: 500});
@@ -271,7 +273,7 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
   }
 
   // Get 'numberOfPlayers' characters randomly
-  const shuffledCharacters = suspectNames.sort(() => Math.random() - 0.5);
+  const shuffledCharacters = suspectNamesUpper.sort(() => Math.random() - 0.5);
   const playerCharacters = shuffledCharacters.slice(0, numberOfPlayers);
 
   return { solutionCards, playerCards, playerCharacters };
@@ -711,6 +713,11 @@ const suspectNames = [
   'mr. green', 'colonel mustard', 'mrs. white'
 ];
 
+const suspectNamesUpper = [
+  'Miss Scarlet', 'Professor Plum', 'Mrs. Peacock',
+  'Mr. Green', 'Colonel Mustard', 'Mrs. White'
+]
+
 // Function to check if a player is in a room
 async function isPlayerInRoom(gameid: string, email: string): Promise<string | null> {
   try {
@@ -851,6 +858,21 @@ export async function processPlayerSuggestion(suggestion: string, email: string,
       return "invalid";
     }
 
+    // move suggested suspect to suggestor's square
+    const { rows: playerData } = await sql`
+      SELECT email
+      FROM Players
+      WHERE character ILIKE ${suspect} AND gameid = ${gameid}
+      LIMIT 1;
+    `;
+    console.log(playerData)
+
+    const suggesteeEmail = playerData.length > 0 ? playerData[0].email : null;
+
+    if (suggesteeEmail !== null) {
+      await setSinglePlayerCoords(suggesteeEmail, (await getPlayerCoords(email, gameid))[0], gameid);
+    }
+
     const room = await getPlayerRoom(email, gameid);
     console.log("Your suggestion:", suspect, weapon, room)
 
@@ -879,10 +901,8 @@ export async function processPlayerSuggestion(suggestion: string, email: string,
       const currPlayerCards = await getPlayerCards(currPlayerEmail);
 
       let matches: string[] = [];
-      console.log("inspecting player", currTurn, "who has email", currPlayerEmail)
 
       for (const card of currPlayerCards) {
-        console.log("inspecting:", card)
         const name = card[1];
   
         // Check if the card matches the suggestion
@@ -1052,6 +1072,29 @@ export async function getGameStatus(gameid: string): Promise<string> {
     return rows[0].gamestate;
   } catch (error) {
     console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
+export async function fetchPlayersWithCharacters(gameid: string): Promise<{ [email: string]: string }> {
+  try {
+    const { rows: playerData } = await sql`
+      SELECT email, character
+      FROM Players
+      WHERE gameid = ${gameid};
+    `;
+
+    const playersWithCharacters: { [email: string]: string } = {};
+    playerData.forEach((player) => {
+      const email = player.email as string;
+      const character = player.character as string;
+      playersWithCharacters[email] = character;
+    });
+
+    return playersWithCharacters;
+
+  } catch (error) {
+    console.error('An error occurred while fetching players:', error);
     throw error;
   }
 }
