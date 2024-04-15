@@ -69,122 +69,113 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     }
   };
  
+  // Room coordinates and names
+  const roomCoordinates: { [key: string]: { name: string } } = {
+    "0,0": { name: "Study" },
+    "0,2": { name: "Hall" },
+    "0,4": { name: "Lounge" },
+    "2,0": { name: "Library" },
+    "2,2": { name: "Billiard Room" },
+    "2,4": { name: "Dining Room" },
+    "4,0": { name: "Conservatory" },
+    "4,2": { name: "Ballroom" },
+    "4,4": { name: "Kitchen" },
+  };
+
   return (
-<div className="flex items-start gap-8">
-  <div className="w-96">
-    <h2>Your Cards:</h2>
-    {cards.map((row, rowIndex) => (
-      <div key={rowIndex} className="flex flex-row">
-        <div className="w-48">
-          {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => (
-            <div key={colIndex} className="border p-2">
-              {card}
+    <div className="flex items-start gap-8">
+      <div className="w-96">
+        <h2>Your Cards</h2>
+        {cards.map((row, rowIndex) => (
+          <div key={rowIndex} className="flex flex-row">
+            <div className="w-48">
+              {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => (
+                <div key={colIndex} className="border p-2">
+                  {card}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="w-48">
-          {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => (
-            <div key={colIndex} className="border p-2">
-              {card}
+            <div className="w-48">
+              {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => (
+                <div key={colIndex} className="border p-2">
+                  {card}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+        ))}
+        
+        <form onSubmit={handleMoveSubmit} className="mt-4">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Your move goes here..."
+            style={{ color: 'black' }}
+            className="w-full px-4 py-2 border rounded"
+            disabled={whoseTurn !== email} // @todo: disable/enable chat based on if it's your turn or not
+          />
+          <button type="submit" className="mt-2 w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            Send
+          </button>
+        </form>
+
+        <div className="mt-4">
+          Player's turn: {whoseTurn}
+        </div>
+        <div>
+          Server: {serverResponse}
         </div>
       </div>
-    ))}
+      
+      <div className="w-240"> {/* 2 times wider than the left column */}
+        <div className="grid grid-cols-5 gap-2"> {/* 2 times wider grid */}
+          {Array.from({ length: 25 }, (_, index) => {
+            const coords = findCoords(index);
+            const email = getEmailForCoords(coords, playerCoords);
+            const roomName = roomCoordinates[`${coords[0]},${coords[1]}`]?.name || '';
 
-    <h2>Players:</h2>
-    {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
-      <div key={rowIndex} className="flex flex-row">
-        <div className="w-48 border p-2">
-          <div className="truncate">{email}</div>
-        </div>
-        <div className="w-48 border p-2">
-          <div>{character}</div>
+            if (index === 6 || index === 8 || index === 16 || index === 18) {
+              return (
+                <div key={index}></div> // Render a blank spot
+              );
+            }
+            if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
+              return (
+                <div
+                  key={index}
+                  className="border p-12 text-left font-bold"
+                  style={{ height: '32px', borderTopWidth: '16px', borderBottomWidth: '16px', textAlign: 'left' }}
+                >
+                  {/* Render your game board cell content here */}
+                  {roomName}
+                </div>
+              );
+            }
+            if (index === 5 || index === 7 || index === 9 || index === 15 || index === 17 || index === 19) {
+              return (
+                <div
+                  key={index}
+                  className="border p-12 text-left font-bold"
+                  style={{ height: '64px', borderLeftWidth: '16px', borderRightWidth: '16px', textAlign: 'left' }}
+                >
+                  {/* Render your game board cell content here */}
+                  {roomName}
+                </div>
+              );
+            }
+            return (
+              <div key={index} className="border p-12 text-left font-bold" style={{ textAlign: 'left' }}>
+                {/* Render your game board cell content here */}
+                {roomName}
+              </div>
+            );
+          })}
         </div>
       </div>
-    ))}
-
-    <form onSubmit={handleMoveSubmit} className="mt-4">
-      <input
-        type="text"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Your move goes here..."
-        style={{ color: 'black' }}
-        className="w-full px-4 py-2 border rounded"
-        disabled={whoseTurn !== email} // @todo: disable/enable chat based on if it's your turn or not
-      />
-      <button type="submit" className="mt-2 w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-        Send
-      </button>
-    </form>
-
-    <div className="mt-4">
-      Player's turn: {whoseTurn}
     </div>
-    <div>
-      Server: {serverResponse}
-    </div>
-  </div>
-  
-  <div className="w-240"> {/* 2 times wider than the left column */}
-  <div className="grid grid-cols-5 gap-2"> {/* 2 times wider grid */}
-  {Array.from({ length: 25 }, (_, index) => {
-    const coords = findCoords(index);
-    const emails = getEmailsFromCoords(coords, playerCoords);
-
-    if (index === 6 || index === 8 || index === 16 || index === 18) {
-      return (
-        <div key={index}></div> // Render a blank spot
-      );
-    }
-    if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
-      return (
-        <div
-          key={index}
-          className="border p-12 text-center"
-          style={{ height: '32px', borderTopWidth: '16px', borderBottomWidth: '16px' }}
-        >
-          {/* Render your game board cell content here */}
-          {emails.length > 0 ? emails.join(', ') : ""}
-        </div>
-      );
-    }
-    if (index === 5 || index === 7 || index === 9 || index === 15 || index === 17 || index === 19) {
-      return (
-        <div
-          key={index}
-          className="border p-12 text-center"
-          style={{ height: '64px', borderLeftWidth: '16px', borderRightWidth: '16px' }}
-        >
-          {/* Render your game board cell content here */}
-          {emails.length > 0 ? emails.join(', ') : ""}
-        </div>
-      );
-    }
-    return (
-      <div key={index} className="border p-12 text-center">
-        {/* Render your game board cell content here */}
-        {emails.length > 0 ? emails.join(', ') : ""}
-      </div>
-    );
-  })}
-</div>
-
-    
-    
-  </div>
-</div>
-
-
-
-
-
-
-
-
   );
-};
+}
 
 // Function to find coordinates for a given index
 function findCoords(index: number): [number, number] {
