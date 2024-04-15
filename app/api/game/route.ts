@@ -1034,14 +1034,31 @@ async function updateTurn(gameid: string): Promise<string> {
 
 // fetches the current player's turn without updating it
 async function whoseTurnIsIt(gameid: string): Promise<string> {
-  const { rows: CurrentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
-  const { rows: playerEmail } = await sql`
-    SELECT email
-    FROM Players
-    WHERE gameid = ${gameid}
-    AND TurnOrder = ${CurrentTurn[0].currentturn}
-    LIMIT 1;`;
-  return playerEmail[0].email
+  try {
+    const { rows: CurrentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
+    const currentTurn = CurrentTurn[0]?.currentturn;
+
+    if (!currentTurn) {
+      throw new Error("Current turn is not defined.");
+    }
+
+    const { rows: playerEmail } = await sql`
+      SELECT email
+      FROM Players
+      WHERE gameid = ${gameid}
+      AND TurnOrder = ${currentTurn}
+      LIMIT 1;
+    `;
+
+    if (playerEmail.length === 0) {
+      throw new Error("Player email not found.");
+    }
+
+    return playerEmail[0].email;
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
 }
 
 async function setGameStatus(gameid: string, status: string): Promise<void> {

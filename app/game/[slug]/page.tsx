@@ -14,9 +14,18 @@ export default async function Game( {params}: any ) {
   let fetchedPlayerCoords: { [email: string]: number[][] } = {};
   let fetchedPlayerCharacters: { [email: string]: string } = {};
 
+  // Function to get base URL
+  const getApiBaseUrl = () => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    return isProduction ? 'https://somacode.vercel.app/' : 'http://localhost:3000';
+  };
+
+  // Construct API URL
+  const apiUrl = `${getApiBaseUrl()}/api/game`;
+
   // get player cards, set player cards if you're the host
   try {
-    const response = await fetch('http://localhost:3000/api/game', {
+    const response = await fetch(apiUrl, {
       method: 'PUT',
       body: JSON.stringify({ 
         gameid: params.slug, 
