@@ -25,7 +25,6 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         setWhoseTurn(() => fetchedTurnData);
       } catch (error) {
         console.error('An error occurred:', error);
-        setWhoseTurn(() => "");
       }
     }
   }
@@ -38,7 +37,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     return () => {
       clearInterval(intervalId);
     };
-  }, []); // Empty dependency array to run only once on mount
+  }, [fetchStatus, whoseTurn, email, gameid]);
 
   const handleMoveSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     // playerCoords['michael-dobroski@outlook.com'] = [[4,4]]
@@ -133,7 +132,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         </form>
 
         <div className="mt-4">
-          Player's turn: {whoseTurn}
+          Player&apos;s turn: {whoseTurn}
         </div>
         <div>
           Server: {serverResponse}

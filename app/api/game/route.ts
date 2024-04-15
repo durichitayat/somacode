@@ -279,7 +279,7 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
   return { solutionCards, playerCards, playerCharacters };
 }
 
-export async function getPlayerCountEmails(gameid: string): Promise<{ playerCount: number, playerEmails: string[] }> {
+async function getPlayerCountEmails(gameid: string): Promise<{ playerCount: number, playerEmails: string[] }> {
   try {
     // Run the SQL query to get the player count and emails
     const { rows } = await sql`
@@ -300,7 +300,7 @@ export async function getPlayerCountEmails(gameid: string): Promise<{ playerCoun
   }
 }
 
-export async function getPlayerCards(email: string): Promise<string[][]> {
+async function getPlayerCards(email: string): Promise<string[][]> {
   try {
     // Run the SQL query to get the updated player information
     const updatedPlayer = await sql`
@@ -328,7 +328,7 @@ export async function getPlayerCards(email: string): Promise<string[][]> {
   }
 }
 
-export async function setPlayerCards(playerEmails: string[], playerCards: string[][][]): Promise<void> {
+async function setPlayerCards(playerEmails: string[], playerCards: string[][][]): Promise<void> {
 
   try {
     let i = 0;
@@ -353,7 +353,7 @@ export async function setPlayerCards(playerEmails: string[], playerCards: string
 
 }
 
-export async function setPlayerTurns(playerEmails: string[]): Promise<void> {
+async function setPlayerTurns(playerEmails: string[]): Promise<void> {
 
   try {
     let i = 1;
@@ -371,7 +371,7 @@ export async function setPlayerTurns(playerEmails: string[]): Promise<void> {
 
 }
 
-export async function setPlayerCharacters(playerEmails: string[], playerCharacters: string[]): Promise<void> {
+async function setPlayerCharacters(playerEmails: string[], playerCharacters: string[]): Promise<void> {
 
   try {
     let i = 0;
@@ -389,7 +389,7 @@ export async function setPlayerCharacters(playerEmails: string[], playerCharacte
 
 }
 
-export async function getPlayerCharacter(email: string): Promise<string> {
+async function getPlayerCharacter(email: string): Promise<string> {
   try {
     // Run the SQL query to get the updated player information
     const updatedPlayer = await sql`
@@ -405,7 +405,7 @@ export async function getPlayerCharacter(email: string): Promise<string> {
   }
 }
 
-export async function setSolutionCards(gameid: string, solutionCards: string[][]): Promise<void> {
+async function setSolutionCards(gameid: string, solutionCards: string[][]): Promise<void> {
 
   try {
     const cardsString = solutionCards.map(innerArray => `ARRAY['${innerArray.join("', '")}']`).join(',');
@@ -423,7 +423,7 @@ export async function setSolutionCards(gameid: string, solutionCards: string[][]
 
 }
 
-export async function getSolutionCards(gameid: string): Promise<string[][]> {
+async function getSolutionCards(gameid: string): Promise<string[][]> {
   try {
     // Run the SQL query to get the updated player information
     const solutionCards = await sql`
@@ -459,7 +459,7 @@ function getRandomRooms(playerCount: number): number[][] {
   return shuffledRooms.slice(0, playerCount);
 }
 
-export async function setSinglePlayerCoords(email: string, room: number[], gameid: string): Promise<void> {
+async function setSinglePlayerCoords(email: string, room: number[], gameid: string): Promise<void> {
 
   try {
     await sql`
@@ -473,7 +473,9 @@ export async function setSinglePlayerCoords(email: string, room: number[], gamei
 
 }
 
-export async function setPlayerCoords(playerEmails: string[], playerRooms: number[][], gameid: string): Promise<void> {
+type SetPlayerCoordsFunction = (playerEmails: string[], playerRooms: number[][], gameid: string) => Promise<void>;
+
+const setPlayerCoords: SetPlayerCoordsFunction = async (playerEmails, playerRooms, gameid) => {
 
   try {
     if (playerEmails.length !== playerRooms.length) {
@@ -494,9 +496,9 @@ export async function setPlayerCoords(playerEmails: string[], playerRooms: numbe
     throw error;
   }
   
-}
+};
 
-export async function getAllPlayerCoords(gameid: string): Promise<{ [email: string]: number[][] }> {
+async function getAllPlayerCoords(gameid: string): Promise<{ [email: string]: number[][] }> {
 
   try {
     const playerCoords: { [email: string]: number[][] } = {};
@@ -527,7 +529,7 @@ export async function getAllPlayerCoords(gameid: string): Promise<{ [email: stri
   
 }
 
-export async function getPlayerCoords(email: string, gameid: string): Promise<number[][]> {
+async function getPlayerCoords(email: string, gameid: string): Promise<number[][]> {
   try {
     const playerCoords: number[][] = [];
 
@@ -566,7 +568,7 @@ const gameboardClueRooms: GameboardClueRooms = {
   "4,4": { name: "Kitchen" },
 };
 
-export async function getPlayerRoom(email: string, gameid: string): Promise<string> {
+async function getPlayerRoom(email: string, gameid: string): Promise<string> {
   try {
     const playerCoords: number[][] = [];
 
@@ -593,7 +595,7 @@ export async function getPlayerRoom(email: string, gameid: string): Promise<stri
 }
 
 // if the move is allowed and the spot exists, it will execute the move and return true. otherwise, false
-export async function processPlayerMove(playerMove: string, email: string, gameid: string): Promise<boolean> {
+async function processPlayerMove(playerMove: string, email: string, gameid: string): Promise<boolean> {
   try {
 
     const playerCoords = await getPlayerCoords(email, gameid);
@@ -643,7 +645,7 @@ export async function processPlayerMove(playerMove: string, email: string, gamei
   }
 }
 
-export async function isCellOccupied(gameid: string, targetCoord: number[]): Promise<boolean> {
+async function isCellOccupied(gameid: string, targetCoord: number[]): Promise<boolean> {
   try {
     const playerData = await sql`
       SELECT COUNT(*)
@@ -660,7 +662,7 @@ export async function isCellOccupied(gameid: string, targetCoord: number[]): Pro
   }
 }
 
-export async function isPlayerTurn(gameid: string, email: string): Promise<boolean> {
+async function isPlayerTurn(gameid: string, email: string): Promise<boolean> {
   try {
     // Get the player's turn order
     const { rows: playerTurnOrder } = await sql`
@@ -796,57 +798,7 @@ async function isGameOver(gameid: string, email: string): Promise<boolean> {
   }
 }
 
-// Exported async function to handle making a suggestion
-// Expected format of the suggestion: "suggest <suspect> with <weapon> in <room>"
-export async function makeSuggestion(gameid: string, email: string, suggestion: string): Promise<string> {
-  try {
-    // Parse the suggestion
-    const [suspect, weapon] = suggestion.split(' with ');
-
-    // Validate the suspect and weapon
-    if (!suspectNames.includes(suspect) || !weaponNames.includes(weapon)) {
-      return "Invalid suggestion. Please ensure you mention a valid suspect and weapon.";
-    }
-
-    // Check if the player is in a room
-    const room = await isPlayerInRoom(gameid, email);
-
-    // Get the list of players in the game
-    const { playerCount, playerEmails } = await getPlayerCountEmails(gameid);
-
-    // Array to store players who can disprove the suggestion along with their cards
-    const disprovingPlayers: { email: string, cards: string[] }[] = [];
-
-    // Iterate through each player to check for cards matching the suggestion
-    for (const playerEmail of playerEmails) {
-      // Get the player's cards
-      const playerCards = await getPlayerCards(playerEmail);
-
-      // Check if the player has any cards matching the suggestion
-      const matchingCards = playerCards.filter(card => card[1] === suspect || card[1] === weapon || (room && card[1] === room));
-
-      if (matchingCards.length > 0) {
-        disprovingPlayers.push({ email: playerEmail, cards: matchingCards.map(card => card[1]) });
-      }
-    }
-
-    // If there are players who can disprove the suggestion, return their emails and cards
-    if (disprovingPlayers.length > 0) {
-      const message = disprovingPlayers.map(player => {
-        return `${player.email} can disprove with card(s): ${player.cards.join(', ')}`;
-      }).join('\n');
-      
-      return message;
-    } else {
-      return "No players can disprove the suggestion.";
-    }
-  } catch (error) {
-    console.error('An error occurred:', error);
-    throw error;
-  }
-}
-
-export async function processPlayerSuggestion(suggestion: string, email: string, gameid: string): Promise<string> {
+async function processPlayerSuggestion(suggestion: string, email: string, gameid: string): Promise<string> {
 
   try {
 
@@ -932,7 +884,7 @@ export async function processPlayerSuggestion(suggestion: string, email: string,
 
 }
 
-export async function processPlayerAccusation(accusation: string, email: string, gameid: string): Promise<string> {
+async function processPlayerAccusation(accusation: string, email: string, gameid: string): Promise<string> {
 
   try {
 
@@ -1073,7 +1025,7 @@ async function setGameStatus(gameid: string, status: string): Promise<void> {
   }
 }
 
-export async function getGameStatus(gameid: string): Promise<string> {
+async function getGameStatus(gameid: string): Promise<string> {
   try {
     const { rows } = await sql`
       SELECT GameState
@@ -1093,7 +1045,7 @@ export async function getGameStatus(gameid: string): Promise<string> {
   }
 }
 
-export async function fetchPlayersWithCharacters(gameid: string): Promise<{ [email: string]: string }> {
+async function fetchPlayersWithCharacters(gameid: string): Promise<{ [email: string]: string }> {
   try {
     const { rows: playerData } = await sql`
       SELECT email, character
