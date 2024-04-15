@@ -609,3 +609,120 @@ export async function isPlayerTurn(gameid: string, email: string): Promise<boole
     throw error;
   }
 }
+const roomNames = [
+  'Kitchen', 'Ballroom', 'Conservatory',
+  'Dining Room', 'Billiard Room', 'Library',
+  'Lounge', 'Hall', 'Study'
+];
+
+const weaponNames = [
+  'Revolver', 'Candlestick', 'Knife',
+  'Lead Pipe', 'Wrench', 'Rope'
+];
+
+const suspectNames = [
+  'Miss Scarlet', 'Professor Plum', 'Mrs. Peacock',
+  'Mr. Green', 'Colonel Mustard', 'Mrs. White'
+];
+
+// Function to check if a player is in a room
+async function isPlayerInRoom(gameid: string, email: string): Promise<string | null> {
+  try {
+    const playerData = await sql`
+      SELECT XCoord, YCoord
+      FROM Players
+      WHERE gameid = ${gameid} AND email = ${email}`;
+
+    const XCoord: number = playerData.rows[0].xcoord;
+    const YCoord: number = playerData.rows[0].ycoord;
+
+    // Iterate through the rooms to check if the player is in any of them
+    for (let i = 0; i < rooms.length; i++) {
+      if (rooms[i][0] === XCoord && rooms[i][1] === YCoord) {
+        return roomNames[i];
+      }
+    }
+
+    return null; // Player is not in any room
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
+// Exported async function to handle making a suggestion
+export async function makeSuggestion(gameid: string, email: string, suggestion: string): Promise<string> {
+  try {
+    // Check if the player is in a room
+    const room = await isPlayerInRoom(gameid, email);
+    if (!room) {
+      return "You are not currently in a room. You can only make a suggestion while in a room.";
+    }
+
+    // Parse the suggestion
+    const [suspect, weapon] = suggestion.split(' with ');
+
+    // Validate the suspect and weapon
+    if (!suspectNames.includes(suspect) || !weaponNames.includes(weapon)) {
+      return "Invalid suggestion. Please ensure you mention a valid suspect and weapon.";
+    }
+
+    // Get the list of players in the same room
+    const { rows: playersInRoom } = await sql`
+      SELECT email
+      FROM Players
+      WHERE gameid = ${gameid} AND xcoord = ${rooms[roomNames.indexOf(room)][0]} AND ycoord = ${rooms[roomNames.indexOf(room)][1]}`;
+
+    // Remove the suggesting player from the list
+    const otherPlayers = playersInRoom.map((player) => player.email).filter((playerEmail: string) => playerEmail !== email);
+
+    // If there are other players in the room, randomly select one to show a card to the suggesting player
+    if (otherPlayers.length > 0) {
+      const cardToShow = getRandomCard();
+      return `You suggested ${suggestion}. ${otherPlayers[0]} shows you ${cardToShow[0]} with ${cardToShow[1]}.`;
+    } else {
+      return `You suggested ${suggestion}. No other players are in the room to show a card.`;
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
+// Exported async function to handle making an accusation
+export async function makeAccusation(gameid: string, email: string, accusation: string): Promise<string> {
+  try {
+    // Parse the accusation
+    const [suspect, weapon, room] = accusation.split(' in the ');
+
+    // Validate the suspect, weapon, and room
+    if (!suspectNames.includes(suspect) || !weaponNames.includes(weapon) || !roomNames.includes(room)) {
+      return "Invalid accusation. Please ensure you mention valid suspects, weapons, and rooms.";
+    }
+
+    // Get the solution cards for the game
+    const { rows: gameData } = await sql`
+      SELECT solution
+      FROM Games
+      WHERE gameid = ${gameid}`;
+
+    const solution = gameData[0].solution;
+
+    // Check if the accusation matches the solution
+    if (solution[0][1] === suspect && solution[1][1] === weapon && solution[2][1] === room) {
+      return `Congratulations! Your accusation of ${accusation} is correct. You win the game!`;
+    } else {
+      return `Sorry, your accusation of ${accusation} is incorrect. You can no longer play.`;
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
+// Utility function to get a random card
+function getRandomCard(): [string, string] {
+  const randomSuspect = suspectNames[Math.floor(Math.random() * suspectNames.length)];
+  const randomWeapon = weaponNames[Math.floor(Math.random() * weaponNames.length)];
+  return [randomSuspect, randomWeapon];
+}
