@@ -85,7 +85,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   return (
     <div className="flex items-start gap-8">
       <div className="w-96">
-        <h2>Your Cards</h2>
+        <h2>Your Cards:</h2>
         {cards.map((row, rowIndex) => (
           <div key={rowIndex} className="flex flex-row">
             <div className="w-48">
@@ -101,6 +101,18 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
                   {card}
                 </div>
               ))}
+            </div>
+          </div>
+        ))}
+
+        <h2>Players:</h2>
+        {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
+          <div key={rowIndex} className="flex flex-row">
+            <div className="w-48 border p-2">
+              <div className="truncate">{email}</div>
+            </div>
+            <div className="w-48 border p-2">
+              <div>{character}</div>
             </div>
           </div>
         ))}
@@ -129,49 +141,53 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
       </div>
       
       <div className="w-240"> {/* 2 times wider than the left column */}
-        <div className="grid grid-cols-5 gap-2"> {/* 2 times wider grid */}
-          {Array.from({ length: 25 }, (_, index) => {
-            const coords = findCoords(index);
-            const email = getEmailForCoords(coords, playerCoords);
-            const roomName = roomCoordinates[`${coords[0]},${coords[1]}`]?.name || '';
+      <div className="w-240"> {/* 2 times wider than the left column */}
+      <div className="grid grid-cols-5 gap-2"> {/* 2 times wider grid */}
+        {Array.from({ length: 25 }, (_, index) => {
+          const coords = findCoords(index);
+          const emails = getEmailsFromCoords(coords, playerCoords);
+          const roomName = roomCoordinates[`${coords[0]},${coords[1]}`]?.name || '';
 
-            if (index === 6 || index === 8 || index === 16 || index === 18) {
-              return (
-                <div key={index}></div> // Render a blank spot
-              );
-            }
-            if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
-              return (
-                <div
-                  key={index}
-                  className="border p-12 text-left font-bold"
-                  style={{ height: '32px', borderTopWidth: '16px', borderBottomWidth: '16px', textAlign: 'left' }}
-                >
-                  {/* Render your game board cell content here */}
-                  {roomName}
-                </div>
-              );
-            }
-            if (index === 5 || index === 7 || index === 9 || index === 15 || index === 17 || index === 19) {
-              return (
-                <div
-                  key={index}
-                  className="border p-12 text-left font-bold"
-                  style={{ height: '64px', borderLeftWidth: '16px', borderRightWidth: '16px', textAlign: 'left' }}
-                >
-                  {/* Render your game board cell content here */}
-                  {roomName}
-                </div>
-              );
-            }
+          if (index === 6 || index === 8 || index === 16 || index === 18) {
             return (
-              <div key={index} className="border p-12 text-left font-bold" style={{ textAlign: 'left' }}>
-                {/* Render your game board cell content here */}
-                {roomName}
+              <div key={index}></div> // Render a blank spot
+            );
+          }
+          if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
+            return (
+              <div
+                key={index}
+                className="border p-12 text-left"
+                style={{ height: '32px', borderTopWidth: '16px', borderBottomWidth: '16px', textAlign: 'left' }}
+              >
+                <div className="font-bold">{roomName}</div>
+                <div className="truncate-2-lines">{emails.length > 0 ? emails.join(', ') : ""}</div>
               </div>
             );
-          })}
-        </div>
+          }
+          if (index === 5 || index === 7 || index === 9 || index === 15 || index === 17 || index === 19) {
+            return (
+              <div
+                key={index}
+                className="border p-12 text-left"
+                style={{ height: '64px', borderLeftWidth: '16px', borderRightWidth: '16px', textAlign: 'left' }}
+              >
+                <div className="font-bold">{roomName}</div>
+                <div className="truncate-4-lines">{emails.length > 0 ? emails.join(', ') : ""}</div>
+              </div>
+            );
+          }
+          return (
+            <div key={index} className="border p-12 text-left" style={{ textAlign: 'left' }}>
+              <div className="font-bold">{roomName}</div>
+              <div className="truncate-3-lines">{emails.length > 0 ? emails.join(', ') : ""}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+
       </div>
     </div>
   );
