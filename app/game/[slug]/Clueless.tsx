@@ -2,31 +2,31 @@
 import { useState, useEffect } from 'react';
 
 export default function Clueless({ gameid, email, cards, playerCoordsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] } }) {
-  const [whoseTurn, setWhoseTurn] = useState<number>();
+  const [whoseTurn, setWhoseTurn] = useState<string>();
   const [serverResponse, setServerResponse] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
   const [playerCoords, setPlayerCoords] = useState<{ [email: string]: number[][] }>(playerCoordsInp);
 
   const fetchStatus = async () => {
-    try {
-      const response = await fetch('/api/game', {
-        method: 'POST',
-        body: JSON.stringify({ 
-          gameid: gameid,
-          email: "fetchStatus",
-          playerMove: "fetchStatus"
-        }),
-      });
-      const responseData = await response.json();
-      const fetchedTurnData = responseData.currentTurn;
-      const fetchedPlayerCoordsData = responseData.playerCoords;
-      setPlayerCoords(fetchedPlayerCoordsData);
-      setWhoseTurn(() => fetchedTurnData);
-      setInputValue('');
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setWhoseTurn(() => -1);
-      setInputValue('');
+    if (whoseTurn !== email) {
+      try {
+        const response = await fetch('/api/game', {
+          method: 'POST',
+          body: JSON.stringify({ 
+            gameid: gameid,
+            email: "fetchStatus",
+            playerMove: "fetchStatus"
+          }),
+        });
+        const responseData = await response.json();
+        const fetchedTurnData = responseData.currentTurn;
+        const fetchedPlayerCoordsData = responseData.playerCoords;
+        setPlayerCoords(fetchedPlayerCoordsData);
+        setWhoseTurn(() => fetchedTurnData);
+      } catch (error) {
+        console.error('An error occurred:', error);
+        setWhoseTurn(() => "");
+      }
     }
   }
 
@@ -99,7 +99,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp }: { ga
         placeholder="Your move goes here..."
         style={{ color: 'black' }}
         className="w-full px-4 py-2 border rounded"
-        disabled={false} // @todo: disable/enable chat based on if it's your turn or not
+        disabled={whoseTurn !== email} // @todo: disable/enable chat based on if it's your turn or not
       />
       <button type="submit" className="mt-2 w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
         Send

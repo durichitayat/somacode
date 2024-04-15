@@ -1,87 +1,164 @@
 import { sql } from "@vercel/postgres";
 import { NextResponse } from 'next/server';
 
-/***************
- * This is more of a proof of concept than anything.
- * Page updates every 5 seconds by sending a "fetchstatus" POST to this API.
- * API then returns the turncount.
- * This turncount can be incremented by any player sending anything in the chatbox.
- * This shows that the text-based Clueless game can be seamlessly updated and demonstrates how to interact with the API.
- * 
- * As a reminder, our APIs are REST so we don't save state other than in the database.
- * So every call to this API must contain the gameid, email (user intentifier), and playerMove (gives insight into the player's move)
- ***************/
+{/***************
+  * This is more of a proof of concept than anything.
+  * Page updates every 5 seconds by sending a "fetchstatus" POST to this API.
+  * API then returns the turncount.
+  * This turncount can be incremented by any player sending anything in the chatbox.
+  * This shows that the text-based Clueless game can be seamlessly updated and demonstrates how to interact with the API.
+  * 
+  * As a reminder, our APIs are REST so we don't save state other than in the database.
+  * So every call to this API must contain the gameid, email (user intentifier), and playerMove (gives insight into the player's move)
+  ***************/}
 
-export async function POST(request: Request) {
+export async function POST (request: Request) { // this will contain most game logic so keep it tidy! functions wherever you can
+
   try {
+
+    // get player move info and log
     const { gameid, email, playerMove }: GameRequestBody = await request.json();
-    console.log("email:", email, "playerMove:", playerMove);
+    console.log("email: ", email, "playerMove: ", playerMove);
 
-    let playerEmail: string | null = null; // Declare playerEmail here and initialize as null
-    let playerCoordsRet: any = null; // Declare playerCoordsRet here and initialize as null or the appropriate type
+    // get current player's turn info and player coords at start b/c it will get used in a lot of cases
+    let playerTurnEmail = await whoseTurnIsIt(gameid);
+    let playerCoords = await getAllPlayerCoords(gameid);
 
+    // if it's a fetchStatus call (representing a 5 sec refresh), return the turn count and all player locations
+    // @todo change it so that we don't have to send all player locations, only the most recent
     if (email.toLowerCase() === "fetchstatus" && playerMove.toLowerCase() === "fetchstatus") {
-      const { rows: currentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
-      playerCoordsRet = await getAllPlayerCoords(gameid);
-      const { rows: playerEmailRows } = await sql`
-        SELECT email
-        FROM Players
-        WHERE gameid = ${gameid}
-        AND TurnOrder = ${currentTurn[0].currentturn}
-        LIMIT 1;`;
-      if (playerEmailRows.length > 0) {
-        playerEmail = playerEmailRows[0].email;
-      }
-      return NextResponse.json({ currentTurn: playerEmail, playerCoords: playerCoordsRet }, { status: 200 });
+      return NextResponse.json({ result: "Refresh...", currentTurn: playerTurnEmail, playerCoords: playerCoords }, {status: 200});
     }
 
+    // if it's not their turn, tell them so
     if (!(await isPlayerTurn(gameid, email))) {
-      const { rows: currentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
-      playerCoordsRet = await getAllPlayerCoords(gameid);
-      const { rows: playerEmailRows } = await sql`
-        SELECT email
-        FROM Players
-        WHERE gameid = ${gameid}
-        AND TurnOrder = ${currentTurn[0].currentturn}
-        LIMIT 1;`;
-      if (playerEmailRows.length > 0) {
-        playerEmail = playerEmailRows[0].email;
+      return NextResponse.json({ result: "Sorry, it's not your turn.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, {status: 200});
+    }
+
+    if ((await getGameStatus(gameid)) === "move?") {
+
+      // input is a player move, so process it
+      const movePlayerSuccess = await processPlayerMove(playerMove.toLowerCase(), email, gameid);
+
+      // if move is valid (meaning both good input and the space is available)
+      if (movePlayerSuccess) {
+        playerCoords = await getAllPlayerCoords(gameid);
+        if ((await isPlayerInRoom(gameid, email)) !== null) { // divert game flow to allow player to make a suggestion if player is in a room
+          await setGameStatus(gameid, 'suggest?');
+          return NextResponse.json({ result: "Success. Would you like to make a suggestion? Give it in the format 'suspect, weapon'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+        }
+        await setGameStatus(gameid, 'accuse?');
+        return NextResponse.json({ result: "Success. Would you like to make an accusation? Give it in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
       }
-      return NextResponse.json({ result: "Sorry, it's not your turn.", currentTurn: playerEmail, playerCoords: playerCoordsRet }, { status: 200 });
+
+      return NextResponse.json({ result: "Sorry, invalid input. Please enter 'right', 'left', 'up', 'down'.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+
     }
 
-    if (playerMove.toLowerCase().startsWith("suggest")) {
-      const suggestionResult = await makeSuggestion(gameid, email, playerMove.substring(8).trim());
-      return NextResponse.json({ result: suggestionResult, currentTurn: playerEmail, playerCoords: playerCoordsRet });
+    if ((await getGameStatus(gameid)) === "suggest?") { // for minimal increment, showing cards after a suggestion is automatic. it chooses one random refutal card if they have one. @todo in target, we will allow players to choose which card they'd like to show the suggestor
+
+      if (playerMove.toLowerCase() === "no") { // player opted not to suggest. change game state to "accuse?"
+        await setGameStatus(gameid, 'accuse?');
+        return NextResponse.json({ result: "Okay! Would you like to make an accusation? Give it in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+      }
+
+      const suggestionResult = await processPlayerSuggestion(playerMove.toLowerCase(), email, gameid);
+
+      if (suggestionResult === "invalid") {
+        return NextResponse.json({ result: "Sorry, invalid input. Give your suggestion in the format 'suspect, weapon'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+      }
+
+      await setGameStatus(gameid, 'accuse?');
+      return NextResponse.json({ result: suggestionResult + "Would you like to make an accusation? Give it in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
     }
 
-    if (playerMove.toLowerCase().startsWith("accuse")) {
-      const accusationResult = await makeAccusation(gameid, email, playerMove.substring(7).trim());
-      return NextResponse.json({ result: accusationResult, currentTurn: playerEmail, playerCoords: playerCoordsRet });
+    if ((await getGameStatus(gameid)) === "accuse?") {
+
+      if (playerMove.toLowerCase() === "no") { // player opted not to accuse. change game state to "move?" and update turn
+        await setGameStatus(gameid, 'move?');
+        playerTurnEmail = await updateTurn(gameid);
+        return NextResponse.json({ result: "Okay! Your opponents are playing ...", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+      }
+
+      const accusationResult = await processPlayerAccusation(playerMove.toLowerCase(), email, gameid);
+
+      if (accusationResult === "invalid") {
+        return NextResponse.json({ result: "Sorry, invalid input. Give your accusation in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+      }
+
+      if (accusationResult === "false") {
+        await deactivatePlayer(gameid, email);
+        playerTurnEmail = await updateTurn(gameid);
+        await setGameStatus(gameid, 'move?');
+        if (await isGameOver(gameid, email)) {
+          // set SolutionRevealed BOOLEAN in the Games table to true
+          // change gameState to 'done'
+          // don't accept any more inputs
+          // display to the rest of players who has won and what the solution was
+          return NextResponse.json({ result: "You lost, and the game is over.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+        }
+        return NextResponse.json({ result: "You lost.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+      }
+
+      if (accusationResult === "true") {
+        // set SolutionRevealed BOOLEAN in the Games table to true
+        // change gameState to 'done'
+        // don't accept any more inputs
+        // display to the rest of players who has won and what the solution was
+        return NextResponse.json({ result: "You won!", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
+      }
     }
 
-    // Handle other cases similarly, ensuring playerEmail and playerCoordsRet are assigned before use.
+    // if you've made it to the end, then something went wrong. invalid game state maybe?
+    return NextResponse.json({ result: "Sorry, something went wrong.", currentTurn: playerTurnEmail, playerCoords: playerCoords }, { status: 200 });
 
   } catch (error) {
     console.log(error)
-    return NextResponse.json({ error }, { status: 500 });
+    return NextResponse.json({error}, {status: 500});
   }
+
 }
 
-export async function PUT(request: Request) {
+export async function PUT (request: Request) {
+
   try {
+
     const { gameid, email } = await request.json();
 
-    let playerEmail: string | null = null; // Declare playerEmail here and initialize as null
-    let playerCoordsRet: any = null; // Declare playerCoordsRet here and initialize as null or the appropriate type
+    // if this is host, then set up everyone's turn order, character, and distribute cards
+    const { rows: game } = await sql`SELECT * FROM Games WHERE gameid = ${gameid} LIMIT 1`;
+    if ((game[0].gameowner === email ?? "") && game[0].gamestate == 'open') {
 
+      const { playerCount, playerEmails } = await getPlayerCountEmails(gameid);
+
+      // close the game state from new players joining and set TurnCount
+      // anything that isn't 'open' corresponds to 'closed'. we use this field to indicate what type of turn a player can make. we always start with a move
+      await sql`
+        UPDATE Games
+        SET GameState = 'move?', TurnCount = ${playerCount}
+        WHERE GameID = ${gameid}`;
+
+      const { solutionCards, playerCards, playerCharacters } = distributeClueCards(playerCount, allClueCards);
+
+      await setSolutionCards(gameid, solutionCards);
+      await setPlayerCards(playerEmails, playerCards);
+      await setPlayerTurns(playerEmails);
+      await setPlayerCharacters(playerEmails, playerCharacters);
+
+      const playerRooms = getRandomRooms(playerCount);
+      await setPlayerCoords(playerEmails, playerRooms, gameid);
+
+    }
+
+    // fetch the cards at $email plus player locations and return them to the game component
     const playerCardsRet = await getPlayerCards(email);
-    playerCoordsRet = await getAllPlayerCoords(gameid);
+    const playerCoordsRet = await getAllPlayerCoords(gameid);
     return NextResponse.json({ playerCards: playerCardsRet, playerCoords: playerCoordsRet }, { status: 200 });
 
   } catch (error) {
-    return NextResponse.json({ error }, { status: 500 });
+    return NextResponse.json({error}, {status: 500});
   }
+
 }
 
 type GameRequestBody = {
@@ -157,7 +234,7 @@ function shuffleArray(array: string[][]): string[][] {
   return shuffledArray;
 }
 
-function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]): { solutionCards: string[][], playerCards: string[][][] } {
+function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]): { solutionCards: string[][], playerCards: string[][][], playerCharacters: string[] } {
   // Create an array of arrays to hold the cards for each player
   const playerCards: string[][][] = new Array(numberOfPlayers).fill([]).map(() => []);
 
@@ -193,7 +270,11 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
     currentPlayerIndex = (currentPlayerIndex + 1) % numberOfPlayers;
   }
 
-  return { solutionCards, playerCards };
+  // Get 'numberOfPlayers' characters randomly
+  const shuffledCharacters = suspectNames.sort(() => Math.random() - 0.5);
+  const playerCharacters = shuffledCharacters.slice(0, numberOfPlayers);
+
+  return { solutionCards, playerCards, playerCharacters };
 }
 
 export async function getPlayerCountEmails(gameid: string): Promise<{ playerCount: number, playerEmails: string[] }> {
@@ -277,7 +358,7 @@ export async function setPlayerTurns(playerEmails: string[]): Promise<void> {
     for (const email of playerEmails) {
       await sql`
         UPDATE Players
-        SET TurnOrder = ${i}
+        SET TurnOrder = ${i}, Active = true
         WHERE email = ${email}`
       i++;
     }
@@ -286,6 +367,40 @@ export async function setPlayerTurns(playerEmails: string[]): Promise<void> {
     throw error;
   }
 
+}
+
+export async function setPlayerCharacters(playerEmails: string[], playerCharacters: string[]): Promise<void> {
+
+  try {
+    let i = 0;
+    for (const email of playerEmails) {
+      await sql`
+        UPDATE Players
+        SET character = ${playerCharacters[i]}
+        WHERE email = ${email}`
+      i++;
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+
+}
+
+export async function getPlayerCharacter(email: string): Promise<string> {
+  try {
+    // Run the SQL query to get the updated player information
+    const updatedPlayer = await sql`
+      SELECT *
+      FROM Players
+      WHERE email = ${email};
+    `;
+
+    return updatedPlayer.rows[0].character;
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
 }
 
 export async function setSolutionCards(gameid: string, solutionCards: string[][]): Promise<void> {
@@ -322,7 +437,7 @@ export async function getSolutionCards(gameid: string): Promise<string[][]> {
 
     // Use a loop to extract the elements using the regex
     let match;
-    while ((match = regex.exec(solutionCards.rows[0].cards)) !== null) {
+    while ((match = regex.exec(solutionCards.rows[0].solution)) !== null) {
       const [, category, value] = match;
       resultArray.push([category, value]);
     }
@@ -433,8 +548,50 @@ export async function getPlayerCoords(email: string, gameid: string): Promise<nu
   }
 }
 
+type GameboardClueRooms = {
+  [key: string]: { name: string };
+};
+
+const gameboardClueRooms: GameboardClueRooms = {
+  "0,0": { name: "Study" },
+  "0,2": { name: "Hall" },
+  "0,4": { name: "Lounge" },
+  "2,0": { name: "Library" },
+  "2,2": { name: "Billiard Room" },
+  "2,4": { name: "Dining Room" },
+  "4,0": { name: "Conservatory" },
+  "4,2": { name: "Ballroom" },
+  "4,4": { name: "Kitchen" },
+};
+
+export async function getPlayerRoom(email: string, gameid: string): Promise<string> {
+  try {
+    const playerCoords: number[][] = [];
+
+    const playerData = await sql`
+      SELECT XCoord, YCoord
+      FROM Players
+      WHERE gameid = ${gameid} AND email = ${email}`;
+
+    for (const row of playerData.rows) {
+      const XCoord: number = row.xcoord;
+      const YCoord: number = row.ycoord;
+      playerCoords.push([XCoord, YCoord]);
+    }
+
+    const coordinateString: string = playerCoords.join(",");
+    const roomAtCoordinates = gameboardClueRooms[coordinateString];
+
+    return roomAtCoordinates.name
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
 // if the move is allowed and the spot exists, it will execute the move and return true. otherwise, false
-export async function processMove(playerMove: string, email: string, gameid: string): Promise<boolean> {
+export async function processPlayerMove(playerMove: string, email: string, gameid: string): Promise<boolean> {
   try {
 
     const playerCoords = await getPlayerCoords(email, gameid);
@@ -540,19 +697,18 @@ export async function isPlayerTurn(gameid: string, email: string): Promise<boole
   }
 }
 const roomNames = [
-  'Kitchen', 'Ballroom', 'Conservatory',
-  'Dining Room', 'Billiard Room', 'Library',
-  'Lounge', 'Hall', 'Study'
+  'kitchen', 'ballroom', 'conservatory', 'dining room',
+  'billiard room', 'library', 'lounge', 'hall', 'study'
 ];
 
 const weaponNames = [
-  'Revolver', 'Candlestick', 'Knife',
-  'Lead Pipe', 'Wrench', 'Rope'
+  'revolver', 'candlestick', 'knife',
+  'lead pipe', 'wrench', 'rope'
 ];
 
 const suspectNames = [
-  'Miss Scarlet', 'Professor Plum', 'Mrs. Peacock',
-  'Mr. Green', 'Colonel Mustard', 'Mrs. White'
+  'miss scarlet', 'professor plum', 'mrs. peacock',
+  'mr. green', 'colonel mustard', 'mrs. white'
 ];
 
 // Function to check if a player is in a room
@@ -580,19 +736,53 @@ async function isPlayerInRoom(gameid: string, email: string): Promise<string | n
   }
 }
 
-export async function getPlayerRotation(gameid: string): Promise<{ playerCount: number, playerEmails: string[], currentPlayerIndex: number }> {
+async function isPlayerActive(gameid: string, email: string): Promise<boolean> {
   try {
-    // Run a SQL query to get the player rotation information
-    const rotationData = await sql`
-      SELECT playeremails, currentplayerindex
-      FROM Games
-      WHERE gameid = ${gameid}`;
+    const playerData = await sql`
+      SELECT Active
+      FROM Players
+      WHERE gameid = ${gameid} AND email = ${email}`;
+    const active: boolean = playerData.rows[0].active;
+    return active
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
 
-    // Extract and return the player rotation information
-    const playerEmails = rotationData.rows[0].playeremails;
-    const currentPlayerIndex = rotationData.rows[0].currentplayerindex;
-    const playerCount = playerEmails.length;
-    return { playerCount, playerEmails, currentPlayerIndex };
+async function deactivatePlayer(gameid: string, email: string): Promise<void> {
+  try {
+    console.log("DEACTIVATING PLAYER:", email)
+    await sql`
+      UPDATE Players
+      SET Active = false
+      WHERE gameid = ${gameid} AND email = ${email}`;
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
+async function isGameOver(gameid: string, email: string): Promise<boolean> {
+  try {
+    const { rows: solutionRevealed } = await sql`
+      SELECT SolutionRevealed
+      FROM Games
+      WHERE gameid = ${gameid}
+      LIMIT 1;`;
+
+    const isSolutionRevealed = solutionRevealed.length > 0 && solutionRevealed[0].solutionrevealed === true;
+
+    const { rows: activePlayersCount } = await sql`
+      SELECT COUNT(*)
+      FROM Players
+      WHERE gameid = ${gameid} AND Active = true;`;
+    
+    const numberOfActivePlayers = activePlayersCount[0].count;
+
+    return isSolutionRevealed || numberOfActivePlayers === 1
+
   } catch (error) {
     console.error('An error occurred:', error);
     throw error;
@@ -649,16 +839,89 @@ export async function makeSuggestion(gameid: string, email: string, suggestion: 
   }
 }
 
-// Exported async function to handle making an accusation
-// Expected format of the accusation: "accuse <suspect> with <weapon> in <room>"
-export async function makeAccusation(gameid: string, email: string, accusation: string): Promise<string> {
-  try {
-    // Parse the accusation
-    const [suspect, weapon, room] = accusation.split(' in ');
+export async function processPlayerSuggestion(suggestion: string, email: string, gameid: string): Promise<string> {
 
-    // Validate the suspect, weapon, and room
-    if (!suspectNames.includes(suspect) || !weaponNames.includes(weapon) || !roomNames.includes(room)) {
-      return "Invalid accusation. Please ensure you mention a valid suspect, weapon, and room.";
+  try {
+
+    // Parse the suggestion
+    const [suspect, weapon] = suggestion.split(', ');
+
+    // Validate the suspect and weapon
+    if (!suspectNames.includes(suspect.toLowerCase()) || !weaponNames.includes(weapon.toLowerCase())) {
+      return "invalid";
+    }
+
+    const room = await getPlayerRoom(email, gameid);
+    console.log("Your suggestion:", suspect, weapon, room)
+
+    const { rows: gameData } = await sql`
+      SELECT CurrentTurn, TurnCount
+      FROM Games
+      WHERE gameid = ${gameid}
+      LIMIT 1;
+    `;
+
+    const originalTurn = gameData.length > 0 ? gameData[0].currentturn : null;
+    const turnCount = gameData.length > 0 ? gameData[0].turncount : null;
+    let currTurn = originalTurn + 1;
+    if (currTurn > turnCount) {
+      currTurn = 1;
+    }
+
+    while (currTurn != originalTurn) {
+      const { rows: playerEmail } = await sql`
+        SELECT email
+        FROM Players
+        WHERE gameid = ${gameid} AND TurnOrder = ${currTurn}
+        LIMIT 1;`;
+      const currPlayerEmail = playerEmail.length > 0 ? playerEmail[0].email : null;
+
+      const currPlayerCards = await getPlayerCards(currPlayerEmail);
+
+      let matches: string[] = [];
+      console.log("inspecting player", currTurn, "who has email", currPlayerEmail)
+
+      for (const card of currPlayerCards) {
+        console.log("inspecting:", card)
+        const name = card[1];
+  
+        // Check if the card matches the suggestion
+        if (name.toLowerCase() === suspect.toLowerCase() || name.toLowerCase() === weapon.toLowerCase() || name.toLowerCase() === room.toLowerCase()) {
+          matches.push(name);
+        }
+      }
+
+      if (matches.length > 0) {
+        // If there are matches, randomly select one
+        const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+        return `Refuted! ${randomMatch} was shown. `;
+      } 
+
+      currTurn++;
+      if (currTurn > turnCount) {
+        currTurn = 1;
+      }
+    }
+
+    return "No one could refute your suggestion! ";
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+
+}
+
+export async function processPlayerAccusation(accusation: string, email: string, gameid: string): Promise<string> {
+
+  try {
+
+    // Parse the suggestion
+    const [suspect, weapon, room] = accusation.split(', ');
+
+    // Validate the suspect and weapon
+    if (!suspectNames.includes(suspect.toLowerCase()) || !weaponNames.includes(weapon.toLowerCase()) || !roomNames.includes(room.toLowerCase())) {
+      return "invalid";
     }
 
     // Check if the accusation matches the solution
@@ -667,46 +930,128 @@ export async function makeAccusation(gameid: string, email: string, accusation: 
     const solutionWeapon = solution.find(card => card[0] === 'Weapon')?.[1];
     const solutionRoom = solution.find(card => card[0] === 'Room')?.[1];
 
-    if (solutionSuspect === suspect && solutionWeapon === weapon && solutionRoom === room) {
+    if (solutionSuspect?.toLowerCase() === suspect?.toLowerCase() && solutionWeapon?.toLowerCase() === weapon?.toLowerCase() && solutionRoom?.toLowerCase() === room?.toLowerCase()) {
       // Accusation is correct
-      return "Congratulations! Your accusation is correct. You win!";
+      return "true";
     } else {
       // Accusation is incorrect
-      // Remove the accusing player from the player rotation
-      await updatePlayerRotation(gameid, email);
-      return "Sorry, your accusation is incorrect. You're out of the game.";
+      return "false";
     }
+
   } catch (error) {
     console.error('An error occurred:', error);
     throw error;
   }
+
 }
 
-// Function to update player rotation after a wrong accusation
-async function updatePlayerRotation(gameid: string, email: string): Promise<void> {
+// updates turn and returns the next player's email
+async function updateTurn(gameid: string): Promise<string> {
   try {
-    // Get the current player rotation
-    const { playerCount, playerEmails, currentPlayerIndex } = await getPlayerRotation(gameid);
-
-    // Remove the accusing player from the player rotation
-    const updatedPlayerEmails = playerEmails.filter((player: string) => player !== email);
-
-    // Update the current player index
-    let updatedCurrentPlayerIndex = currentPlayerIndex;
-    if (updatedCurrentPlayerIndex >= updatedPlayerEmails.length) {
-      updatedCurrentPlayerIndex = 0; // Reset to the first player if the current player index exceeds the number of players
+    const { rows: updatedTurn } = await sql`
+          WITH updated AS (
+            UPDATE Games
+            SET CurrentTurn = CurrentTurn + 1
+            WHERE gameid = ${gameid}
+            RETURNING CurrentTurn, TurnCount
+          )
+          SELECT CurrentTurn, TurnCount
+          FROM updated;
+        `;
+    let currentTurn = updatedTurn[0].currentturn;
+    if (updatedTurn[0].currentturn > updatedTurn[0].turncount) { // reset currentTurn to 1 for starting over at first player
+      const { rows: updatedTurn } = await sql`
+        UPDATE Games
+        SET CurrentTurn = 1
+        WHERE gameid = ${gameid}
+        RETURNING CurrentTurn;
+      `;
+      currentTurn = updatedTurn[0].currentturn;
     }
-
-    // Update the player rotation in the database
-    await begin(async (sql: any) => { // Assuming 'begin' is the method to begin a transaction
-      await sql`UPDATE Games SET PlayerEmails = ${updatedPlayerEmails}, CurrentPlayerIndex = ${updatedCurrentPlayerIndex} WHERE gameid = ${gameid}`;
-    });
+    const { rows: playerEmail } = await sql`
+          SELECT email
+          FROM Players
+          WHERE gameid = ${gameid}
+          AND TurnOrder = ${currentTurn}
+          LIMIT 1;`;
+    let emailRet = playerEmail[0].email;
+    while (!(await isPlayerActive(gameid, emailRet))) { // keep changing turns until we get to an active player
+      const { rows: updatedTurn } = await sql`
+          WITH updated AS (
+            UPDATE Games
+            SET CurrentTurn = CurrentTurn + 1
+            WHERE gameid = ${gameid}
+            RETURNING CurrentTurn, TurnCount
+          )
+          SELECT CurrentTurn, TurnCount
+          FROM updated;
+        `;
+      let currentTurn = updatedTurn[0].currentturn;
+      if (updatedTurn[0].currentturn > updatedTurn[0].turncount) { // reset currentTurn to 1 for starting over at first player
+        const { rows: updatedTurn } = await sql`
+          UPDATE Games
+          SET CurrentTurn = 1
+          WHERE gameid = ${gameid}
+          RETURNING CurrentTurn;
+        `;
+        currentTurn = updatedTurn[0].currentturn;
+      }
+      const { rows: playerEmail } = await sql`
+            SELECT email
+            FROM Players
+            WHERE gameid = ${gameid}
+            AND TurnOrder = ${currentTurn}
+            LIMIT 1;`;
+      emailRet = playerEmail[0].email;
+    }
+    console.log("IT IS NOW", emailRet, "'S TURN!")
+    return emailRet
   } catch (error) {
     console.error('An error occurred:', error);
     throw error;
   }
 }
 
-function begin(arg0: (sql: any) => Promise<void>) {
-  throw new Error("Function not implemented.");
+// fetches the current player's turn without updating it
+async function whoseTurnIsIt(gameid: string): Promise<string> {
+  const { rows: CurrentTurn } = await sql`SELECT CurrentTurn FROM Games WHERE gameid = ${gameid} LIMIT 1`;
+  const { rows: playerEmail } = await sql`
+    SELECT email
+    FROM Players
+    WHERE gameid = ${gameid}
+    AND TurnOrder = ${CurrentTurn[0].currentturn}
+    LIMIT 1;`;
+  return playerEmail[0].email
+}
+
+async function setGameStatus(gameid: string, status: string): Promise<void> {
+  try {
+    await sql`
+      UPDATE Games
+      SET GameState = ${status}
+      WHERE gameid = ${gameid}`;
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+}
+
+export async function getGameStatus(gameid: string): Promise<string> {
+  try {
+    const { rows } = await sql`
+      SELECT GameState
+      FROM Games
+      WHERE gameid = ${gameid}
+      LIMIT 1;
+    `;
+
+    if (rows.length === 0) {
+      throw new Error(`Game with ID ${gameid} not found`);
+    }
+
+    return rows[0].gamestate;
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
 }

@@ -26,7 +26,9 @@ export async function GET (request: Request) {
           TurnOrder INT,
           XCoord INT,
           YCoord INT,
-          cards TEXT[][]
+          cards TEXT[][],
+          character VARCHAR(50),
+          Active BOOLEAN
         )
       `
     console.log({table}, {status: 200});
