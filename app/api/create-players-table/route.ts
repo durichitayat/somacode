@@ -22,7 +22,13 @@ export async function GET (request: Request) {
           FOREIGN KEY (GameID) REFERENCES Games(GameID),
           Winner BOOLEAN,
           created_at TIMESTAMP DEFAULT NOW(),
-          updated_at TIMESTAMP DEFAULT NOW()
+          updated_at TIMESTAMP DEFAULT NOW(),
+          TurnOrder INT,
+          XCoord INT,
+          YCoord INT,
+          cards TEXT[][],
+          character VARCHAR(50),
+          Active BOOLEAN
         )
       `
     console.log({table}, {status: 200});

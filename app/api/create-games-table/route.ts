@@ -24,14 +24,7 @@ export async function GET (request: Request) {
             GameOwner VARCHAR(255),
             FOREIGN KEY (GameOwner) REFERENCES Users(email),
             
-            MurdererID INT, 
-            FOREIGN KEY (MurdererID) REFERENCES Characters(CharacterID),
-
-            MurderWeaponID INT,
-            FOREIGN KEY (MurderWeaponID) REFERENCES Weapons(WeaponID),
-
-            MurderRoomID INT, 
-            FOREIGN KEY (MurderRoomID) REFERENCES Rooms(RoomID),
+            solution TEXT[][],
 
             GameState VARCHAR(50),
             
