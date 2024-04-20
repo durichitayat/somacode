@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function Clueless({ gameid, email, cards, playerCoordsInp, playerCharsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] }, playerCharsInp: { [email: string]: string } }) {
+export default function Clueless({ gameid, email, cards, playerCoordsInp, playerCharsInp, playerIconsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] }, playerCharsInp: { [email: string]: string }, playerIconsInp: { [email: string]: string } }) {
   const [whoseTurn, setWhoseTurn] = useState<string>();
   const [serverResponse, setServerResponse] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
@@ -81,6 +81,19 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     "4,4": { name: "Kitchen" },
   };
 
+  const roomImages: { [key: string]: string } = {
+    "Study": "https://i5.walmartimages.com/asr/903edd24-c5f6-4b03-b337-496fe699db2b.a36e87cc654a3a629f75fa39a32e09d2.png?odnHeight=768&odnWidth=768&odnBg=FFFFFF",
+    "Hall": "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/15847a33-c83d-44ed-a01f-7422642237d2/dflpgnm-81b177f8-85d8-49c1-b47d-edebcbff8985.png/v1/fill/w_1280,h_1291/clue_hall_hd_by_goofballgb_dflpgnm-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTI5MSIsInBhdGgiOiJcL2ZcLzE1ODQ3YTMzLWM4M2QtNDRlZC1hMDFmLTc0MjI2NDIyMzdkMlwvZGZscGdubS04MWIxNzdmOC04NWQ4LTQ5YzEtYjQ3ZC1lZGViY2JmZjg5ODUucG5nIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.yWk8qG63F01Nbll2N9YpL2U1_QTgMKLnxmc4DlRf-vU",
+    "Lounge": "https://i.ebayimg.com/images/g/ku8AAOSweblfCBz4/s-l1200.webp",
+    "Library": "https://i.ebayimg.com/00/s/MTQ0MFgxNDQw/z/oEsAAOSwvjRfCBp7/$_1.PNG",
+    "Billiard Room": "https://i.ebayimg.com/images/g/Wq0AAOSw-19fB9zj/s-l400.jpg",
+    "Dining Room": "https://i.ebayimg.com/images/g/in8AAOSwVZFfB~3k/s-l400.jpg",
+    "Conservatory": "https://i.ebayimg.com/images/g/jPgAAOSwZE5fB~pO/s-l400.jpg",
+    "Ballroom": "https://i.ebayimg.com/images/g/RLMAAOSwzLFfB9kL/s-l400.jpg",
+    "Kitchen": "https://m.media-amazon.com/images/I/71DZ2INzLAL._AC_UF894,1000_QL80_.jpg",
+  };
+  
+
   return (
     <div className="flex items-start gap-8">
       <div className="w-96">
@@ -112,6 +125,9 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             </div>
             <div className="w-48 border p-2">
               <div>{character}</div>
+            </div>
+            <div className="w-48 border p-2">
+              <img src={playerIconsInp[email]} alt="Player Icon" className="w-12 h-12" />
             </div>
           </div>
         ))}
@@ -146,21 +162,26 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           const coords = findCoords(index);
           const emails = getEmailsFromCoords(coords, playerCoords);
           const roomName = roomCoordinates[`${coords[0]},${coords[1]}`]?.name || '';
+          const backgroundImage = roomImages[roomName];
 
           if (index === 6 || index === 8 || index === 16 || index === 18) {
             return (
-              <div key={index}></div> // Render a blank spot
+              <div key={index} ></div> // Render a blank spot
             );
           }
           if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
             return (
               <div
                 key={index}
-                className="border p-12 text-left"
-                style={{ height: '32px', borderTopWidth: '16px', borderBottomWidth: '16px', textAlign: 'left' }}
+                className="w-48 h-48 flex flex-col justify-center items-center" // Center the content vertically and horizontally
+                style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
               >
                 <div className="font-bold">{roomName}</div>
-                <div className="truncate-2-lines">{emails.length > 0 ? emails.join(', ') : ""}</div>
+                <div className="flex">
+                  {emails.map((email, i) => (
+                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" />
+                  ))}
+                </div>
               </div>
             );
           }
@@ -168,18 +189,26 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             return (
               <div
                 key={index}
-                className="border p-12 text-left"
-                style={{ height: '64px', borderLeftWidth: '16px', borderRightWidth: '16px', textAlign: 'left' }}
+                className="w-48 h-48 flex flex-col justify-center items-center" // Center the content vertically and horizontally
+                style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
               >
                 <div className="font-bold">{roomName}</div>
-                <div className="truncate-4-lines">{emails.length > 0 ? emails.join(', ') : ""}</div>
+                <div className="flex flex-col">
+                  {emails.map((email, i) => (
+                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full my-1" />
+                  ))}
+                </div>
               </div>
             );
-          }
+          }          
           return (
-            <div key={index} className="border p-12 text-left" style={{ textAlign: 'left' }}>
+            <div key={index} className="w-48 h-48 border p-12 text-center" style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}>
               <div className="font-bold">{roomName}</div>
-              <div className="truncate-3-lines">{emails.length > 0 ? emails.join(', ') : ""}</div>
+              <div className="flex">
+                {emails.map((email, i) => (
+                  <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" />
+                ))}
+              </div>
             </div>
           );
         })}

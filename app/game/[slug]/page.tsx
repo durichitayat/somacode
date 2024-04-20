@@ -13,6 +13,7 @@ export default async function Game( {params}: any ) {
   let fetchedCards: any[] = [];
   let fetchedPlayerCoords: { [email: string]: number[][] } = {};
   let fetchedPlayerCharacters: { [email: string]: string } = {};
+  let fetchedPlayerIcons: { [email: string]: string } = {};
 
   // Function to get base URL
   const getApiBaseUrl = () => {
@@ -37,10 +38,12 @@ export default async function Game( {params}: any ) {
     const fetchedCardsData = responseData.playerCards;
     const fetchedPlayerCoordsData = responseData.playerCoords;
     const fetchedPlayerCharactersData = responseData.playerCharacters;
+    const fetchedPlayerIconData = responseData.playerIcons;
 
     fetchedCards = fetchedCardsData;
     fetchedPlayerCoords = fetchedPlayerCoordsData;
     fetchedPlayerCharacters = fetchedPlayerCharactersData;
+    fetchedPlayerIcons = fetchedPlayerIconData;
 
     // console.log("Player Cards:", fetchedCards);
     // console.log("Player Coords:", fetchedPlayerCoords);
@@ -61,6 +64,7 @@ export default async function Game( {params}: any ) {
         cards={fetchedCards}
         playerCoordsInp={fetchedPlayerCoords}
         playerCharsInp={fetchedPlayerCharacters}
+        playerIconsInp={fetchedPlayerIcons}
       />
 
       <Footer />

@@ -155,7 +155,8 @@ export async function PUT (request: Request) {
     const playerCardsRet = await getPlayerCards(email);
     const playerCoordsRet = await getAllPlayerCoords(gameid);
     const playerCharactersRet = await fetchPlayersWithCharacters(gameid);
-    return NextResponse.json({ playerCards: playerCardsRet, playerCoords: playerCoordsRet, playerCharacters : playerCharactersRet }, { status: 200 });
+    const playerIconsRet = await fetchPlayersWithIcons(gameid);
+    return NextResponse.json({ playerCards: playerCardsRet, playerCoords: playerCoordsRet, playerCharacters : playerCharactersRet, playerIcons : playerIconsRet }, { status: 200 });
 
   } catch (error) {
     return NextResponse.json({error}, {status: 500});
@@ -1064,6 +1065,30 @@ async function fetchPlayersWithCharacters(gameid: string): Promise<{ [email: str
 
   } catch (error) {
     console.error('An error occurred while fetching players:', error);
+    throw error;
+  }
+}
+
+async function fetchPlayersWithIcons(gameid: string): Promise<{ [email: string]: string }> {
+  try {
+    const { rows: playerData } = await sql`
+      SELECT p.email, u.image
+      FROM Players p
+      INNER JOIN Users u ON p.email = u.email
+      WHERE p.gameid = ${gameid};
+    `;
+
+    const playersWithIcons: { [email: string]: string } = {};
+    playerData.forEach((player) => {
+      const email = player.email as string;
+      const image = player.image as string;
+      playersWithIcons[email] = image;
+    });
+
+    return playersWithIcons;
+
+  } catch (error) {
+    console.error('An error occurred while fetching players with icons:', error);
     throw error;
   }
 }
