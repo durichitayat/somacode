@@ -27,6 +27,8 @@ export async function GET (request: Request) {
             solution TEXT[][],
 
             GameState VARCHAR(50),
+
+            MostRecentAction VARCHAR(255),
             
             StartTime TIMESTAMP,
             EndTime TIMESTAMP,

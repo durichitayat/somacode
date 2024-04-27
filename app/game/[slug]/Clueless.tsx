@@ -6,6 +6,7 @@ type NotesGrid = boolean[][];
 export default function Clueless({ gameid, email, cards, playerCoordsInp, playerCharsInp, playerIconsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] }, playerCharsInp: { [email: string]: string }, playerIconsInp: { [email: string]: string } }) {
   const [whoseTurn, setWhoseTurn] = useState<string>();
   const [serverResponse, setServerResponse] = useState<string>('');
+  const [mostRecentAction, setMostRecentAction] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
   const [playerCoords, setPlayerCoords] = useState<{ [email: string]: number[][] }>(playerCoordsInp);
   const [isClueNotesOpen, setIsClueNotesOpen] = useState(true);
@@ -27,7 +28,9 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         const responseData = await response.json();
         const fetchedTurnData = responseData.currentTurn;
         const fetchedPlayerCoordsData = responseData.playerCoords;
+        const fetchedMostRecentAction = responseData.mostRecentAction;
         setPlayerCoords(fetchedPlayerCoordsData);
+        setMostRecentAction(() => fetchedMostRecentAction);
         setWhoseTurn(() => fetchedTurnData);
       } catch (error) {
         console.error('An error occurred:', error);
@@ -63,9 +66,11 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
       const fetchedTurnData = responseData.currentTurn;
       const fetchedPlayerCoordsData = responseData.playerCoords;
       const fetchedServerResponse = responseData.result;
+      const fetchedMostRecentAction = responseData.mostRecentAction;
       setPlayerCoords(fetchedPlayerCoordsData);
       setWhoseTurn(() => fetchedTurnData);
       setServerResponse(() => fetchedServerResponse);
+      setMostRecentAction(() => fetchedMostRecentAction);
       setInputValue('');
     } catch (error) {
       console.error('An error occurred:', error);
@@ -152,7 +157,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             placeholder="Your move goes here..."
             style={{ color: 'black' }}
             className="w-full px-4 py-2 border rounded"
-            disabled={whoseTurn !== email} // @todo: disable/enable chat based on if it's your turn or not
+            disabled={whoseTurn !== email}
           />
           <button type="submit" className="mt-2 w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
             Send
@@ -162,8 +167,11 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         <div className="mt-4">
           Player&apos;s turn: {whoseTurn}
         </div>
-        <div>
+        <div className="my-2"> {/* Adding margin-y */}
           Server: {serverResponse}
+        </div>
+        <div className="my-2"> {/* Adding margin-y */}
+          Most recent action: {mostRecentAction}
         </div>
       </div>
       
