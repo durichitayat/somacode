@@ -18,7 +18,7 @@ export async function POST (request: Request) { // this will contain most game l
 
     // get player move info and log
     const { gameid, email, playerMove }: GameRequestBody = await request.json();
-    console.log("email: ", email, "playerMove: ", playerMove);
+    // console.log("email: ", email, "playerMove: ", playerMove);
 
     // get current player's turn info and player coords at start b/c it will get used in a lot of cases
     let playerTurnEmail = await whoseTurnIsIt(gameid);
@@ -47,10 +47,10 @@ export async function POST (request: Request) { // this will contain most game l
         mostRecentAction = await getMostRecentAction(gameid);
         if ((await isPlayerInRoom(gameid, email)) !== null) { // divert game flow to allow player to make a suggestion if player is in a room
           await setGameStatus(gameid, 'suggest?');
-          return NextResponse.json({ result: "Success. Would you like to make a suggestion? Give it in the format 'suspect, weapon'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+          return NextResponse.json({ result: "Success. Make a suggestion?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
         }
         await setGameStatus(gameid, 'accuse?');
-        return NextResponse.json({ result: "Success. Would you like to make an accusation? Give it in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+        return NextResponse.json({ result: "Success. Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
       }
 
       return NextResponse.json({ result: movePlayerResult, currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
@@ -59,35 +59,35 @@ export async function POST (request: Request) { // this will contain most game l
 
     if ((await getGameStatus(gameid)) === "suggest?") { // for minimal increment, showing cards after a suggestion is automatic. it chooses one random refutal card if they have one. @todo in target, we will allow players to choose which card they'd like to show the suggestor
 
-      if (playerMove.toLowerCase() === "no") { // player opted not to suggest. change game state to "accuse?"
+      if (playerMove === "no") { // player opted not to suggest. change game state to "accuse?"
         await setGameStatus(gameid, 'accuse?');
-        return NextResponse.json({ result: "Okay! Would you like to make an accusation? Give it in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+        return NextResponse.json({ result: "Okay! Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
       }
 
-      const suggestionResult = await processPlayerSuggestion(playerMove.toLowerCase(), email, gameid);
+      const suggestionResult = await processPlayerSuggestion(playerMove, email, gameid);
 
       if (suggestionResult === "invalid") {
-        return NextResponse.json({ result: "Sorry, invalid input. Give your suggestion in the format 'suspect, weapon'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+        return NextResponse.json({ result: "Sorry, invalid input. Make sure you select every option. Room will be the one you're already in.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
       }
 
       await setGameStatus(gameid, 'accuse?');
       playerCoords = await getAllPlayerCoords(gameid);
       mostRecentAction = await getMostRecentAction(gameid);
-      return NextResponse.json({ result: suggestionResult + "Would you like to make an accusation? Give it in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      return NextResponse.json({ result: suggestionResult + "Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
     }
 
     if ((await getGameStatus(gameid)) === "accuse?") {
 
-      if (playerMove.toLowerCase() === "no") { // player opted not to accuse. change game state to "move?" and update turn
+      if (playerMove === "no") { // player opted not to accuse. change game state to "move?" and update turn
         await setGameStatus(gameid, 'move?');
         playerTurnEmail = await updateTurn(gameid);
         return NextResponse.json({ result: "Okay!", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
       }
 
-      const accusationResult = await processPlayerAccusation(playerMove.toLowerCase(), email, gameid);
+      const accusationResult = await processPlayerAccusation(playerMove, email, gameid);
 
       if (accusationResult === "invalid") {
-        return NextResponse.json({ result: "Sorry, invalid input. Give your accusation in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+        return NextResponse.json({ result: "Sorry, invalid input. Make sure you select every option.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
       }
 
       if (accusationResult === "false") {
@@ -124,7 +124,6 @@ export async function POST (request: Request) { // this will contain most game l
     return NextResponse.json({ result: "Sorry, something went wrong.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
 
   } catch (error) {
-    console.log(error)
     return NextResponse.json({error}, {status: 500});
   }
 
@@ -285,7 +284,7 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
   }
 
   // Get 'numberOfPlayers' characters randomly
-  const shuffledCharacters = suspectNamesUpper.sort(() => Math.random() - 0.5);
+  const shuffledCharacters = suspectNames.sort(() => Math.random() - 0.5);
   const playerCharacters = shuffledCharacters.slice(0, numberOfPlayers);
 
   return { solutionCards, playerCards, playerCharacters };
@@ -752,25 +751,21 @@ async function isPlayerTurn(gameid: string, email: string): Promise<boolean> {
     throw error;
   }
 }
-const roomNames = [
-  'kitchen', 'ballroom', 'conservatory', 'dining room',
-  'billiard room', 'library', 'lounge', 'hall', 'study'
-];
-
-const weaponNames = [
-  'revolver', 'candlestick', 'knife',
-  'lead pipe', 'wrench', 'rope'
-];
 
 const suspectNames = [
-  'miss scarlet', 'professor plum', 'mrs. peacock',
-  'mr. green', 'colonel mustard', 'mrs. white'
-];
-
-const suspectNamesUpper = [
   'Miss Scarlet', 'Professor Plum', 'Mrs. Peacock',
   'Mr. Green', 'Colonel Mustard', 'Mrs. White'
 ]
+
+const roomNames = [
+  'Kitchen', 'Ballroom', 'Conservatory', 'Dining room',
+  'Billiard Room', 'Library', 'Lounge', 'Hall', 'Study'
+];
+
+const weaponNames = [
+  'Revolver', 'Candlestick', 'Knife',
+  'Lead Pipe', 'Wrench', 'Rope'
+];
 
 // Function to check if a player is in a room
 async function isPlayerInRoom(gameid: string, email: string): Promise<string | null> {
@@ -813,7 +808,6 @@ async function isPlayerActive(gameid: string, email: string): Promise<boolean> {
 
 async function deactivatePlayer(gameid: string, email: string): Promise<void> {
   try {
-    console.log("DEACTIVATING PLAYER:", email)
     await sql`
       UPDATE Players
       SET Active = false
@@ -876,10 +870,9 @@ async function processPlayerSuggestion(suggestion: string, email: string, gameid
 
     // Parse the suggestion
     const [suspect, weapon] = suggestion.split(', ');
-    const action: string = email + " suggested " + suggestion + ". ";
 
     // Validate the suspect and weapon
-    if (!suspectNames.includes(suspect.toLowerCase()) || !weaponNames.includes(weapon.toLowerCase())) {
+    if (!suspectNames.includes(suspect) || !weaponNames.includes(weapon)) {
       return "invalid";
     }
 
@@ -890,7 +883,6 @@ async function processPlayerSuggestion(suggestion: string, email: string, gameid
       WHERE character ILIKE ${suspect} AND gameid = ${gameid}
       LIMIT 1;
     `;
-    console.log(playerData)
 
     const suggesteeEmail = playerData.length > 0 ? playerData[0].email : null;
 
@@ -899,7 +891,8 @@ async function processPlayerSuggestion(suggestion: string, email: string, gameid
     }
 
     const room = await getPlayerRoom(email, gameid);
-    console.log("Your suggestion:", suspect, weapon, room)
+
+    const action: string = email + " suggested that " + suspect + " killed someone with a " + weapon + " in the " + room + ". ";
 
     const { rows: gameData } = await sql`
       SELECT CurrentTurn, TurnCount
@@ -931,7 +924,7 @@ async function processPlayerSuggestion(suggestion: string, email: string, gameid
         const name = card[1];
   
         // Check if the card matches the suggestion
-        if (name.toLowerCase() === suspect.toLowerCase() || name.toLowerCase() === weapon.toLowerCase() || name.toLowerCase() === room.toLowerCase()) {
+        if (name === suspect || name === weapon || name === room) {
           matches.push(name);
         }
       }
@@ -939,7 +932,7 @@ async function processPlayerSuggestion(suggestion: string, email: string, gameid
       if (matches.length > 0) {
         // If there are matches, randomly select one
         const randomMatch = matches[Math.floor(Math.random() * matches.length)];
-        await setMostRecentAction(gameid, action + currPlayerEmail + " refuted " + suggestion + " by showing " + randomMatch + "!");
+        await setMostRecentAction(gameid, action + currPlayerEmail + " refuted this by showing " + randomMatch + ".");
         return `Refuted! ${randomMatch} was shown. `;
       } 
 
@@ -968,7 +961,7 @@ async function processPlayerAccusation(accusation: string, email: string, gameid
     const action: string = email + " accused " + accusation + ". ";
 
     // Validate the suspect and weapon
-    if (!suspectNames.includes(suspect.toLowerCase()) || !weaponNames.includes(weapon.toLowerCase()) || !roomNames.includes(room.toLowerCase())) {
+    if (!suspectNames.includes(suspect) || !weaponNames.includes(weapon) || !roomNames.includes(room)) {
       return "invalid";
     }
 
@@ -978,7 +971,7 @@ async function processPlayerAccusation(accusation: string, email: string, gameid
     const solutionWeapon = solution.find(card => card[0] === 'Weapon')?.[1];
     const solutionRoom = solution.find(card => card[0] === 'Room')?.[1];
 
-    if (solutionSuspect?.toLowerCase() === suspect?.toLowerCase() && solutionWeapon?.toLowerCase() === weapon?.toLowerCase() && solutionRoom?.toLowerCase() === room?.toLowerCase()) {
+    if (solutionSuspect === suspect && solutionWeapon === weapon && solutionRoom === room) {
       // Accusation is correct
       await setMostRecentAction(gameid, action + "They were correct! Congrats to " + email + " on the win!")
       return "true";
@@ -1054,7 +1047,6 @@ async function updateTurn(gameid: string): Promise<string> {
             LIMIT 1;`;
       emailRet = playerEmail[0].email;
     }
-    console.log("IT IS NOW", emailRet, "'S TURN!")
     return emailRet
   } catch (error) {
     console.error('An error occurred:', error);

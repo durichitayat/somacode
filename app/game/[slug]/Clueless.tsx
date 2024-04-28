@@ -15,6 +15,9 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     Array.from({ length: 21 }, () => Array.from({ length: numPlayers }, () => false))
   );
   const [hoveredCell, setHoveredCell] = useState<number | null>(null);
+  const [selectedSuspect, setSelectedSuspect] = useState('');
+  const [selectedRoom, setSelectedRoom] = useState('');
+  const [selectedWeapon, setSelectedWeapon] = useState('');
 
   const fetchStatus = async () => {
     if (whoseTurn !== email) {
@@ -80,6 +83,87 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
       setInputValue('');
     }
   };
+
+  const handleSuggest = async () => {
+    try {
+      const response = await fetch('/api/game', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          gameid: gameid, 
+          email: email,
+          playerMove: selectedSuspect + ", " + selectedWeapon
+        }),
+      });
+      const responseData = await response.json();
+      const fetchedTurnData = responseData.currentTurn;
+      const fetchedPlayerCoordsData = responseData.playerCoords;
+      const fetchedServerResponse = responseData.result;
+      const fetchedMostRecentAction = responseData.mostRecentAction;
+      setPlayerCoords(fetchedPlayerCoordsData);
+      setWhoseTurn(() => fetchedTurnData);
+      setServerResponse(() => fetchedServerResponse);
+      setMostRecentAction(() => fetchedMostRecentAction);
+      setInputValue('');
+    } catch (error) {
+      console.error('An error occurred:', error);
+      setServerResponse(() => 'An error occurred: ' + error);
+      setInputValue('');
+    }
+  }
+  
+  const handleAccuse = async () => {
+    try {
+      const response = await fetch('/api/game', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          gameid: gameid, 
+          email: email,
+          playerMove: selectedSuspect + ", " + selectedWeapon + ", " + selectedRoom
+        }),
+      });
+      const responseData = await response.json();
+      const fetchedTurnData = responseData.currentTurn;
+      const fetchedPlayerCoordsData = responseData.playerCoords;
+      const fetchedServerResponse = responseData.result;
+      const fetchedMostRecentAction = responseData.mostRecentAction;
+      setPlayerCoords(fetchedPlayerCoordsData);
+      setWhoseTurn(() => fetchedTurnData);
+      setServerResponse(() => fetchedServerResponse);
+      setMostRecentAction(() => fetchedMostRecentAction);
+      setInputValue('');
+    } catch (error) {
+      console.error('An error occurred:', error);
+      setServerResponse(() => 'An error occurred: ' + error);
+      setInputValue('');
+    }
+  }
+
+  const handleSkip = async () => {
+    try {
+      const response = await fetch('/api/game', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          gameid: gameid, 
+          email: email,
+          playerMove: "no"
+        }),
+      });
+      const responseData = await response.json();
+      const fetchedTurnData = responseData.currentTurn;
+      const fetchedPlayerCoordsData = responseData.playerCoords;
+      const fetchedServerResponse = responseData.result;
+      const fetchedMostRecentAction = responseData.mostRecentAction;
+      setPlayerCoords(fetchedPlayerCoordsData);
+      setWhoseTurn(() => fetchedTurnData);
+      setServerResponse(() => fetchedServerResponse);
+      setMostRecentAction(() => fetchedMostRecentAction);
+      setInputValue('');
+    } catch (error) {
+      console.error('An error occurred:', error);
+      setServerResponse(() => 'An error occurred: ' + error);
+      setInputValue('');
+    }
+  }
 
   const handleNotesClick = (rowIndex: number, colIndex: number): void => {
     const updatedNotes: NotesGrid = [...notes];
@@ -151,7 +235,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   return (
     <div className="flex items-start gap-8">
       <div className="w-96">
-        <h2>Your Cards:</h2>
+        <h2 className="relative mb-4 mt-4">Your Cards:</h2>
         {cards.map((row, rowIndex) => (
           <div key={rowIndex} className="flex flex-row">
             <div className="w-48">
@@ -171,22 +255,22 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           </div>
         ))}
 
-        <h2>Players:</h2>
+        <h2 className="relative mb-4 mt-4">Players:</h2>
         {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
           <div key={rowIndex} className="flex flex-row">
-            <div className="w-48 border p-2">
+            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
               <div className="truncate">{email}</div>
             </div>
-            <div className="w-48 border p-2">
+            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
               <div>{character}</div>
             </div>
-            <div className="w-48 border p-2">
+            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
               <img src={playerIconsInp[email]} alt="Player Icon" className="w-12 h-12" />
             </div>
           </div>
         ))}
         
-        <form onSubmit={handleMoveSubmit} className="mt-4">
+        {/* <form onSubmit={handleMoveSubmit} className="mt-4">
           <input
             type="text"
             value={inputValue}
@@ -199,17 +283,81 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           <button type="submit" className="mt-2 w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
             Send
           </button>
-        </form>
+        </form> */}
 
-        <div className="mt-4">
+        {/* Room Dropdown */}
+        <div className="relative mb-4 mt-4">
+          <select
+            value={selectedRoom}
+            onChange={(e) => setSelectedRoom(e.target.value)}
+            className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
+          >
+            <option className="text-gray-800 bg-gray-300">Select Room</option>
+            {roomNames.map((name, index) => (
+              <option key={index} value={name}>{name}</option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Suspect Dropdown */}
+        <div className="relative mb-4">
+          <select
+            value={selectedSuspect}
+            onChange={(e) => setSelectedSuspect(e.target.value)}
+            className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
+          >
+            <option className="text-gray-800 bg-gray-300">Select Suspect</option>
+            {suspectNames.map((name, index) => (
+              <option key={index} value={name}>{name}</option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Weapon Dropdown */}
+        <div className="relative mb-4">
+          <select
+            value={selectedWeapon}
+            onChange={(e) => setSelectedWeapon(e.target.value)}
+            className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
+          >
+            <option className="text-gray-800 bg-gray-300">Select Weapon</option>
+            {weaponNames.map((name, index) => (
+              <option key={index} value={name}>{name}</option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z"/>
+            </svg>
+          </div>
+        </div>
+
+        <div className="flex justify-center space-x-4 mb-4">
+          <button onClick={() => handleSuggest()} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">Suggest</button>
+          <button onClick={() => handleAccuse()} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">Accuse</button>
+          <button onClick={() => handleSkip()} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">Skip</button>
+        </div>
+
+        {/* <div className="mt-4">
           Player&apos;s turn: {whoseTurn}
+        </div> */}
+        <div className="my-2">
+          <strong className="text-gray-700">Server Response:</strong> {serverResponse}
         </div>
-        <div className="my-2"> {/* Adding margin-y */}
-          Server: {serverResponse}
+        <div className="my-2">
+          <strong className="text-gray-700">Latest Action:</strong> {mostRecentAction}
         </div>
-        <div className="my-2"> {/* Adding margin-y */}
-          Most recent action: {mostRecentAction}
-        </div>
+
       </div>
       
       <div className="w-240"> {/* 2 times wider than the left column */}
@@ -243,7 +391,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
                 <div className="font-bold">{roomName}</div>
                 <div className="flex">
                   {emails.map((email, i) => (
-                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" />
+                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}/>
                   ))}
                 </div>
               </div>
@@ -262,7 +410,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
                 <div className="font-bold">{roomName}</div>
                 <div className="flex flex-col">
                   {emails.map((email, i) => (
-                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full my-1" />
+                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full my-1" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}/>
                   ))}
                 </div>
               </div>
@@ -343,7 +491,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
                 <div className="font-bold">{roomName}</div>
                 <div className="flex">
                   {emails.map((email, i) => (
-                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" />
+                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 10px lime)' } : {}}/>
                   ))}
                 </div>
               </div>
