@@ -220,6 +220,10 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           const emails = getEmailsFromCoords(coords, playerCoords);
           const roomName = roomCoordinates[`${coords[0]},${coords[1]}`]?.name || '';
           const backgroundImage = roomImages[roomName];
+          const renderStudySecretPassage = index === 0;
+          const renderLoungeSecretPassage = index === 4;
+          const renderConservatorySecretPassage = index === 20;
+          const renderKitchenSecretPassage = index === 24;
 
           if (index === 6 || index === 8 || index === 16 || index === 18) {
             return (
@@ -266,18 +270,82 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           }          
           return (
             <div 
-              key={index}
-              className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-              style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
-              onMouseEnter={() => handleMouseEnter(index)}
-              onMouseLeave={handleMouseLeave}
-              onClick={() => handleRoomMoveClick(coords)}
+            key={index}
+            className="relative"
             >
-              <div className="font-bold">{roomName}</div>
-              <div className="flex">
-                {emails.map((email, i) => (
-                  <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" />
-                ))}
+              {renderStudySecretPassage && (
+                <div 
+                  className={`absolute bottom-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -1 ? 'opacity-70' : ''}`}
+                  onMouseEnter={() => handleMouseEnter(-1)}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={() => handleRoomMoveClick([4,4])}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(180deg)' }}>
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M7 7l10 10" />
+                    <path d="M16 7l-9 0l0 9" />
+                  </svg>
+                </div>
+              )}
+
+              {renderLoungeSecretPassage && (
+                <div 
+                  className={`absolute bottom-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -2 ? 'opacity-70' : ''}`}
+                  onMouseEnter={() => handleMouseEnter(-2)}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={() => handleRoomMoveClick([4,0])}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(270deg)' }}>
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M7 7l10 10" />
+                    <path d="M16 7l-9 0l0 9" />
+                  </svg>
+                </div>
+              )}
+
+              {renderConservatorySecretPassage && (
+                <div 
+                  className={`absolute top-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -3 ? 'opacity-70' : ''}`}
+                  onMouseEnter={() => handleMouseEnter(-3)}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={() => handleRoomMoveClick([0,4])}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(90deg)' }}>
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M7 7l10 10" />
+                    <path d="M16 7l-9 0l0 9" />
+                  </svg>
+                </div>
+              )}
+
+              {renderKitchenSecretPassage && (
+                <div 
+                  className={`absolute top-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -4 ? 'opacity-70' : ''}`}
+                  onMouseEnter={() => handleMouseEnter(-4)}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={() => handleRoomMoveClick([0,0])}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M7 7l10 10" />
+                    <path d="M16 7l-9 0l0 9" />
+                  </svg>
+                </div>
+              )}
+
+              <div 
+                className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={handleMouseLeave}
+                onClick={() => handleRoomMoveClick(coords)}
+              >
+                <div className="font-bold">{roomName}</div>
+                <div className="flex">
+                  {emails.map((email, i) => (
+                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" />
+                  ))}
+                </div>
               </div>
             </div>
           );

@@ -619,7 +619,7 @@ async function processPlayerMove(coordsString: string, email: string, gameid: st
       return "Invalid room.";
     }
 
-    if (!(isOneCellAway(playerCoordsBefore, playerCoordsAfter))) {
+    if (!(isOneCellAway(playerCoordsBefore, playerCoordsAfter) || isSecretPassage(playerCoordsBefore, playerCoordsAfter))) {
       return "Invalid move. You must move to a room or hallway adjacent to your current spot."
     }
 
@@ -673,6 +673,28 @@ function isOneCellAway(coordsBefore: [number, number], coordsAfter: [number, num
 
   // Check if either deltaX or deltaY is 1, meaning coordsAfter is one cell away
   return (deltaX === 1 && deltaY === 0) || (deltaY === 1 && deltaX === 0);
+}
+
+function isSecretPassage(playerCoordsBefore: [number, number], playerCoordsAfter: [number, number]): boolean {
+  const [xBefore, yBefore] = playerCoordsBefore;
+  const [xAfter, yAfter] = playerCoordsAfter;
+
+  // Check for each specific secret passage
+  if (xBefore === 0 && yBefore === 0 && xAfter === 4 && yAfter === 4) {
+      return true;
+  }
+  if (xBefore === 0 && yBefore === 4 && xAfter === 4 && yAfter === 0) {
+      return true;
+  }
+  if (xBefore === 4 && yBefore === 0 && xAfter === 0 && yAfter === 4) {
+      return true;
+  }
+  if (xBefore === 4 && yBefore === 4 && xAfter === 0 && yAfter === 0) {
+      return true;
+  }
+
+  // If none of the secret passages matched
+  return false;
 }
 
 async function isCellOccupied(gameid: string, targetCoord: number[]): Promise<boolean> {
