@@ -3,6 +3,15 @@ import { useState, useEffect } from 'react';
 
 type NotesGrid = boolean[][];
 
+// Function to get base URL
+const getApiBaseUrl = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  return isProduction ? 'https://somacode.vercel.app/' : 'http://localhost:3000';
+};
+
+// Construct API URL
+const apiUrl = `${getApiBaseUrl()}/api/game`;
+
 export default function Clueless({ gameid, email, cards, playerCoordsInp, playerCharsInp, playerIconsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] }, playerCharsInp: { [email: string]: string }, playerIconsInp: { [email: string]: string } }) {
   const [whoseTurn, setWhoseTurn] = useState<string>();
   const [serverResponse, setServerResponse] = useState<string>('');
@@ -22,7 +31,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   const fetchStatus = async () => {
     if (whoseTurn !== email) {
       try {
-        const response = await fetch('/api/game', {
+        const response = await fetch(apiUrl, {
           method: 'POST',
           body: JSON.stringify({ 
             gameid: gameid,
@@ -53,40 +62,40 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     };
   }, [fetchStatus, whoseTurn, email, gameid]);
 
-  const handleMoveSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    // playerCoords['michael-dobroski@outlook.com'] = [[4,4]]
-    e.preventDefault();
-    if (inputValue.trim() === '') return;
+  // const handleMoveSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   // playerCoords['michael-dobroski@outlook.com'] = [[4,4]]
+  //   e.preventDefault();
+  //   if (inputValue.trim() === '') return;
     
-    try {
-      const response = await fetch('/api/game', {
-        method: 'POST',
-        body: JSON.stringify({ 
-          gameid: gameid, 
-          email: email,
-          playerMove: inputValue
-        }),
-      });
-      const responseData = await response.json();
-      const fetchedTurnData = responseData.currentTurn;
-      const fetchedPlayerCoordsData = responseData.playerCoords;
-      const fetchedServerResponse = responseData.result;
-      const fetchedMostRecentAction = responseData.mostRecentAction;
-      setPlayerCoords(fetchedPlayerCoordsData);
-      setWhoseTurn(() => fetchedTurnData);
-      setServerResponse(() => fetchedServerResponse);
-      setMostRecentAction(() => fetchedMostRecentAction);
-      setInputValue('');
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setServerResponse(() => 'An error occurred: ' + error);
-      setInputValue('');
-    }
-  };
+  //   try {
+  //     const response = await fetch(apiUrl, {
+  //       method: 'POST',
+  //       body: JSON.stringify({ 
+  //         gameid: gameid, 
+  //         email: email,
+  //         playerMove: inputValue
+  //       }),
+  //     });
+  //     const responseData = await response.json();
+  //     const fetchedTurnData = responseData.currentTurn;
+  //     const fetchedPlayerCoordsData = responseData.playerCoords;
+  //     const fetchedServerResponse = responseData.result;
+  //     const fetchedMostRecentAction = responseData.mostRecentAction;
+  //     setPlayerCoords(fetchedPlayerCoordsData);
+  //     setWhoseTurn(() => fetchedTurnData);
+  //     setServerResponse(() => fetchedServerResponse);
+  //     setMostRecentAction(() => fetchedMostRecentAction);
+  //     setInputValue('');
+  //   } catch (error) {
+  //     console.error('An error occurred:', error);
+  //     setServerResponse(() => 'An error occurred: ' + error);
+  //     setInputValue('');
+  //   }
+  // };
 
   const handleSuggest = async () => {
     try {
-      const response = await fetch('/api/game', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: JSON.stringify({ 
           gameid: gameid, 
@@ -113,7 +122,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   
   const handleAccuse = async () => {
     try {
-      const response = await fetch('/api/game', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: JSON.stringify({ 
           gameid: gameid, 
@@ -140,7 +149,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
   const handleSkip = async () => {
     try {
-      const response = await fetch('/api/game', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: JSON.stringify({ 
           gameid: gameid, 
@@ -207,7 +216,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   const handleRoomMoveClick = async (coords: [number, number]) => {
     const coordsString: string = `[${coords[0]}, ${coords[1]}]`;
     try {
-      const response = await fetch('/api/game', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: JSON.stringify({ 
           gameid: gameid, 
