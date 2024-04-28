@@ -14,6 +14,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   const [notes, setNotes] = useState<NotesGrid>(
     Array.from({ length: 21 }, () => Array.from({ length: numPlayers }, () => false))
   );
+  const [hoveredCell, setHoveredCell] = useState<number | null>(null);
 
   const fetchStatus = async () => {
     if (whoseTurn !== email) {
@@ -111,6 +112,41 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     "Kitchen": "https://m.media-amazon.com/images/I/71DZ2INzLAL._AC_UF894,1000_QL80_.jpg",
   };
   
+  const handleMouseEnter = (index: number) => {
+    setHoveredCell(index);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredCell(null);
+  };
+
+  const handleRoomMoveClick = async (coords: [number, number]) => {
+    const coordsString: string = `[${coords[0]}, ${coords[1]}]`;
+    try {
+      const response = await fetch('/api/game', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          gameid: gameid, 
+          email: email,
+          playerMove: coordsString
+        }),
+      });
+      const responseData = await response.json();
+      const fetchedTurnData = responseData.currentTurn;
+      const fetchedPlayerCoordsData = responseData.playerCoords;
+      const fetchedServerResponse = responseData.result;
+      const fetchedMostRecentAction = responseData.mostRecentAction;
+      setPlayerCoords(fetchedPlayerCoordsData);
+      setWhoseTurn(() => fetchedTurnData);
+      setServerResponse(() => fetchedServerResponse);
+      setMostRecentAction(() => fetchedMostRecentAction);
+      setInputValue('');
+    } catch (error) {
+      console.error('An error occurred:', error);
+      setServerResponse(() => 'An error occurred: ' + error);
+      setInputValue('');
+    }
+  };
 
   return (
     <div className="flex items-start gap-8">
@@ -194,8 +230,11 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             return (
               <div
                 key={index}
-                className="w-48 h-48 flex flex-col justify-center items-center" // Center the content vertically and horizontally
+                className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
                 style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={handleMouseLeave}
+                onClick={() => handleRoomMoveClick(coords)}
               >
                 <div className="font-bold">{roomName}</div>
                 <div className="flex">
@@ -210,8 +249,11 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             return (
               <div
                 key={index}
-                className="w-48 h-48 flex flex-col justify-center items-center" // Center the content vertically and horizontally
+                className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
                 style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={handleMouseLeave}
+                onClick={() => handleRoomMoveClick(coords)}
               >
                 <div className="font-bold">{roomName}</div>
                 <div className="flex flex-col">
@@ -223,7 +265,14 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             );
           }          
           return (
-            <div key={index} className="w-48 h-48 border p-12 text-center" style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}>
+            <div 
+              key={index}
+              className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+              style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
+              onMouseEnter={() => handleMouseEnter(index)}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleRoomMoveClick(coords)}
+            >
               <div className="font-bold">{roomName}</div>
               <div className="flex">
                 {emails.map((email, i) => (

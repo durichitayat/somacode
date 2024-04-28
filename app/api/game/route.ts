@@ -39,10 +39,10 @@ export async function POST (request: Request) { // this will contain most game l
     if ((await getGameStatus(gameid)) === "move?") {
 
       // input is a player move, so process it
-      const movePlayerSuccess = await processPlayerMove(playerMove.toLowerCase(), email, gameid);
+      const movePlayerResult = await processPlayerMove(playerMove, email, gameid);
 
       // if move is valid (meaning both good input and the space is available)
-      if (movePlayerSuccess) {
+      if (movePlayerResult === "success") {
         playerCoords = await getAllPlayerCoords(gameid);
         mostRecentAction = await getMostRecentAction(gameid);
         if ((await isPlayerInRoom(gameid, email)) !== null) { // divert game flow to allow player to make a suggestion if player is in a room
@@ -53,7 +53,7 @@ export async function POST (request: Request) { // this will contain most game l
         return NextResponse.json({ result: "Success. Would you like to make an accusation? Give it in the format 'suspect, weapon, room'. Otherwise, reply with 'no'.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
       }
 
-      return NextResponse.json({ result: "Sorry, invalid input. Please enter 'right', 'left', 'up', 'down'.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      return NextResponse.json({ result: movePlayerResult, currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
 
     }
 
@@ -541,7 +541,7 @@ async function getAllPlayerCoords(gameid: string): Promise<{ [email: string]: nu
   
 }
 
-async function getPlayerCoords(email: string, gameid: string): Promise<number[][]> {
+async function getPlayerCoords(email: string, gameid: string): Promise<number[]> {
   try {
     const playerCoords: number[][] = [];
 
@@ -556,7 +556,7 @@ async function getPlayerCoords(email: string, gameid: string): Promise<number[][
       playerCoords.push([XCoord, YCoord]);
     }
 
-    return playerCoords;
+    return playerCoords[0];
 
   } catch (error) {
     console.error('An error occurred:', error);
@@ -607,59 +607,72 @@ async function getPlayerRoom(email: string, gameid: string): Promise<string> {
 }
 
 // if the move is allowed and the spot exists, it will execute the move and return true. otherwise, false
-async function processPlayerMove(playerMove: string, email: string, gameid: string): Promise<boolean> {
+async function processPlayerMove(coordsString: string, email: string, gameid: string): Promise<string> {
   try {
 
-    const playerCoords = await getPlayerCoords(email, gameid);
-    const action: string = email + " moved " + playerMove;
-    
-    if (
-      playerMove === "right" &&
-      playerCoords[0][1] + 1 <= 4 &&
-      !blankSpaces.some(coord => coord[0] === playerCoords[0][0] && coord[1] === playerCoords[0][1] + 1) &&
-      !(await isCellOccupied(gameid, [playerCoords[0][0], playerCoords[0][1] + 1]))
-    ) {
-      await setMostRecentAction(gameid, action);
-      await setSinglePlayerCoords(email, [playerCoords[0][0], playerCoords[0][1] + 1], gameid);
-      return true;
-    }
-    if (
-      playerMove === "left" &&
-      playerCoords[0][1] - 1 >= 0 &&
-      !blankSpaces.some(coord => coord[0] === playerCoords[0][0] && coord[1] === playerCoords[0][1] - 1) &&
-      !(await isCellOccupied(gameid, [playerCoords[0][0], playerCoords[0][1] - 1]))
-    ) {
-      await setMostRecentAction(gameid, action);
-      await setSinglePlayerCoords(email, [playerCoords[0][0], playerCoords[0][1] - 1], gameid);
-      return true;
-    }    
-    if (
-      playerMove === "up" &&
-      playerCoords[0][0] - 1 >= 0 &&
-      !blankSpaces.some(coord => coord[0] === playerCoords[0][0] - 1 && coord[1] === playerCoords[0][1]) &&
-      !(await isCellOccupied(gameid, [playerCoords[0][0] - 1, playerCoords[0][1]]))
-    ) {
-      await setMostRecentAction(gameid, action);
-      await setSinglePlayerCoords(email, [playerCoords[0][0] - 1, playerCoords[0][1]], gameid);
-      return true;
-    }    
-    if (
-      playerMove === "down" &&
-      playerCoords[0][0] + 1 <= 4 &&
-      !blankSpaces.some(coord => coord[0] === playerCoords[0][0] + 1 && coord[1] === playerCoords[0][1]) &&
-      !(await isCellOccupied(gameid, [playerCoords[0][0] + 1, playerCoords[0][1]]))
-    ) {
-      await setMostRecentAction(gameid, action);
-      await setSinglePlayerCoords(email, [playerCoords[0][0] + 1, playerCoords[0][1]], gameid);
-      return true;
-    }    
+    const playerCoordsBeforeTemp = await getPlayerCoords(email, gameid);
+    const playerCoordsBefore: [number, number] = [playerCoordsBeforeTemp[0], playerCoordsBeforeTemp[1]];
+    const playerCoordsAfter = parseCoords(coordsString);
+    const action: string = email + " moved their character.";
 
-    return false;
+    if (playerCoordsAfter === null) {
+      return "Invalid room.";
+    }
+
+    if (!(isOneCellAway(playerCoordsBefore, playerCoordsAfter))) {
+      return "Invalid move. You must move to a room or hallway adjacent to your current spot."
+    }
+
+    if (await isCellOccupied(gameid, [playerCoordsAfter[0], playerCoordsAfter[1]])) {
+      return "Invalid move. Cell is already occupied. Only one player per room or hallway except during suggestions."
+    }
+
+    await setMostRecentAction(gameid, action);
+    await setSinglePlayerCoords(email, [playerCoordsAfter[0], playerCoordsAfter[1]], gameid);
+    return "success";
+
   } catch (error) {
     // Handle any errors that might occur during processing
     console.error("Error processing move:", error);
     throw new Error("Error processing move");
   }
+}
+
+function parseCoords(coords: string): [number, number] | null {
+  // Remove whitespace and brackets from the input string
+  const cleanedCoords = coords.replace(/\s|\[|\]/g, '');
+
+  // Split the cleaned string into an array of strings separated by comma
+  const coordValues = cleanedCoords.split(',');
+
+  // Check if there are exactly two values after splitting
+  if (coordValues.length !== 2) {
+    return null; // Return null if there are not exactly two values
+  }
+
+  // Parse the string values into numbers
+  const x = parseFloat(coordValues[0]);
+  const y = parseFloat(coordValues[1]);
+
+  // Check if parsing was successful
+  if (isNaN(x) || isNaN(y)) {
+    return null; // Return null if parsing failed
+  }
+
+  // Return the coordinates as a tuple
+  return [x, y];
+}
+
+function isOneCellAway(coordsBefore: [number, number], coordsAfter: [number, number]): boolean {
+  const [xBefore, yBefore] = coordsBefore;
+  const [xAfter, yAfter] = coordsAfter;
+
+  // Calculate the absolute difference in x and y coordinates
+  const deltaX = Math.abs(xAfter - xBefore);
+  const deltaY = Math.abs(yAfter - yBefore);
+
+  // Check if either deltaX or deltaY is 1, meaning coordsAfter is one cell away
+  return (deltaX === 1 && deltaY === 0) || (deltaY === 1 && deltaX === 0);
 }
 
 async function isCellOccupied(gameid: string, targetCoord: number[]): Promise<boolean> {
@@ -860,7 +873,7 @@ async function processPlayerSuggestion(suggestion: string, email: string, gameid
     const suggesteeEmail = playerData.length > 0 ? playerData[0].email : null;
 
     if (suggesteeEmail !== null) {
-      await setSinglePlayerCoords(suggesteeEmail, (await getPlayerCoords(email, gameid))[0], gameid);
+      await setSinglePlayerCoords(suggesteeEmail, (await getPlayerCoords(email, gameid)), gameid);
     }
 
     const room = await getPlayerRoom(email, gameid);
