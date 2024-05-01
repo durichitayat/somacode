@@ -46,10 +46,7 @@ export default async function Dashboard() {
           <tbody>
 
           {rows.map((row) => (
-            <>
-              
                 <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600" key={row.gameid}>
-                  
                   <th scope="row" className="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
                     
                       <Link href={"/lobby/" + row.gameid} className="ps-3 flex flex-col" >
@@ -61,11 +58,7 @@ export default async function Dashboard() {
                   <td className="px-6 py-4">
                     <div className="font-normal text-gray-500">{row.gamestate}</div>
                   </td>
-
-                  
                 </tr>
-              
-            </>
           ))}
           
           </tbody>
