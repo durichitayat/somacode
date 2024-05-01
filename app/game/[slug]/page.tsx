@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import Clueless from "./Clueless";
 import Footer from "@/app/components/Footer";
-import { sql } from "@vercel/postgres";
 
 export default async function Game( {params}: any ) {
   const session = await getServerSession();
