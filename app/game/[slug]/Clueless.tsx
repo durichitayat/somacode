@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import GameBoard from './GameBoard';
 
 type NotesGrid = boolean[][];
 
@@ -23,7 +24,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   const [notes, setNotes] = useState<NotesGrid>(
     Array.from({ length: 21 }, () => Array.from({ length: numPlayers }, () => false))
   );
-  const [hoveredCell, setHoveredCell] = useState<number | null>(null);
+
   const [selectedSuspect, setSelectedSuspect] = useState('');
   const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedWeapon, setSelectedWeapon] = useState('');
@@ -61,6 +62,34 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
       clearInterval(intervalId);
     };
   }, [whoseTurn, email, gameid]);
+
+  const handleRoomMoveClick = async (coords: [number, number]) => {
+    const coordsString: string = `[${coords[0]}, ${coords[1]}]`;
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        body: JSON.stringify({ 
+          gameid: gameid, 
+          email: email,
+          playerMove: coordsString
+        }),
+      });
+      const responseData = await response.json();
+      const fetchedTurnData = responseData.currentTurn;
+      const fetchedPlayerCoordsData = responseData.playerCoords;
+      const fetchedServerResponse = responseData.result;
+      const fetchedMostRecentAction = responseData.mostRecentAction;
+      setPlayerCoords(fetchedPlayerCoordsData);
+      setWhoseTurn(() => fetchedTurnData);
+      setServerResponse(() => fetchedServerResponse);
+      setMostRecentAction(() => fetchedMostRecentAction);
+      setInputValue('');
+    } catch (error) {
+      console.error('An error occurred:', error);
+      setServerResponse(() => 'An error occurred: ' + error);
+      setInputValue('');
+    }
+  };
 
   const handleSuggest = async () => {
     try {
@@ -148,110 +177,43 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     updatedNotes[rowIndex][colIndex] = !updatedNotes[rowIndex][colIndex];
     setNotes(updatedNotes);
   };
- 
-  // Room coordinates and names
-  const roomCoordinates: { [key: string]: { name: string } } = {
-    "0,0": { name: "Study" },
-    "0,2": { name: "Hall" },
-    "0,4": { name: "Lounge" },
-    "2,0": { name: "Library" },
-    "2,2": { name: "Billiard Room" },
-    "2,4": { name: "Dining Room" },
-    "4,0": { name: "Conservatory" },
-    "4,2": { name: "Ballroom" },
-    "4,4": { name: "Kitchen" },
-  };
-
-  const roomImages: { [key: string]: string } = {
-    "Study": "https://i5.walmartimages.com/asr/903edd24-c5f6-4b03-b337-496fe699db2b.a36e87cc654a3a629f75fa39a32e09d2.png?odnHeight=768&odnWidth=768&odnBg=FFFFFF",
-    "Hall": "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/15847a33-c83d-44ed-a01f-7422642237d2/dflpgnm-81b177f8-85d8-49c1-b47d-edebcbff8985.png/v1/fill/w_1280,h_1291/clue_hall_hd_by_goofballgb_dflpgnm-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTI5MSIsInBhdGgiOiJcL2ZcLzE1ODQ3YTMzLWM4M2QtNDRlZC1hMDFmLTc0MjI2NDIyMzdkMlwvZGZscGdubS04MWIxNzdmOC04NWQ4LTQ5YzEtYjQ3ZC1lZGViY2JmZjg5ODUucG5nIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.yWk8qG63F01Nbll2N9YpL2U1_QTgMKLnxmc4DlRf-vU",
-    "Lounge": "https://i.ebayimg.com/images/g/ku8AAOSweblfCBz4/s-l1200.webp",
-    "Library": "https://i.ebayimg.com/00/s/MTQ0MFgxNDQw/z/oEsAAOSwvjRfCBp7/$_1.PNG",
-    "Billiard Room": "https://i.ebayimg.com/images/g/Wq0AAOSw-19fB9zj/s-l400.jpg",
-    "Dining Room": "https://i.ebayimg.com/images/g/in8AAOSwVZFfB~3k/s-l400.jpg",
-    "Conservatory": "https://i.ebayimg.com/images/g/jPgAAOSwZE5fB~pO/s-l400.jpg",
-    "Ballroom": "https://i.ebayimg.com/images/g/RLMAAOSwzLFfB9kL/s-l400.jpg",
-    "Kitchen": "https://m.media-amazon.com/images/I/71DZ2INzLAL._AC_UF894,1000_QL80_.jpg",
-  };
-  
-  const handleMouseEnter = (index: number) => {
-    setHoveredCell(index);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredCell(null);
-  };
-
-  const handleRoomMoveClick = async (coords: [number, number]) => {
-    const coordsString: string = `[${coords[0]}, ${coords[1]}]`;
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        body: JSON.stringify({ 
-          gameid: gameid, 
-          email: email,
-          playerMove: coordsString
-        }),
-      });
-      const responseData = await response.json();
-      const fetchedTurnData = responseData.currentTurn;
-      const fetchedPlayerCoordsData = responseData.playerCoords;
-      const fetchedServerResponse = responseData.result;
-      const fetchedMostRecentAction = responseData.mostRecentAction;
-      setPlayerCoords(fetchedPlayerCoordsData);
-      setWhoseTurn(() => fetchedTurnData);
-      setServerResponse(() => fetchedServerResponse);
-      setMostRecentAction(() => fetchedMostRecentAction);
-      setInputValue('');
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setServerResponse(() => 'An error occurred: ' + error);
-      setInputValue('');
-    }
-  };
 
   return (
     <div className="flex items-start gap-8">
 
-      {/* Your Cards */}
+      {/* Left Sidebar */}
       <div className="w-96">
-        <h2 className="relative mb-4 mt-4">Your Cards:</h2>
-        {cards.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex flex-row">
-            <div className="w-48">
-              {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => (
-                <div key={colIndex} className="border p-2">
-                  {card}
-                </div>
-              ))}
-            </div>
-            <div className="w-48">
-              {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => (
-                <div key={colIndex} className="border p-2">
-                  {card}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
 
-        <h2 className="relative mb-4 mt-4">Players:</h2>
+        {/* Your Cards */}
+        <h2 className=" mb-4 mt-4 font-bold">Your Cards:</h2>
+        <div className='grid grid-cols-1 justify-start p-4 bg-slate-900 shadow'>
+        {cards.map((row, rowIndex) => (
+            <div key={rowIndex}  className="grid  my-2">
+              <p className='font-bold'>{row[1]}</p>
+              <p className='text-xs text-slate-500'>{row[0]}</p>
+            </div>
+        ))}
+        </div>
+        
+        {/* Players */}
+        <h2 className=" my-4 font-bold">Players:</h2>
+        <div className="grid grid-cols-1 justify-start p-4 bg-slate-900 shadow">
         {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
-          <div key={rowIndex} className="flex flex-row">
-            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
-              <div className="truncate">{email}</div>
-            </div>
-            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
-              <div>{character}</div>
-            </div>
-            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
-              <img src={playerIconsInp[email]} alt="Player Icon" className="w-12 h-12" />
+          <div key={rowIndex} className={`grid grid-cols-1 justify-start ${whoseTurn === email ? "bg-green-800" : ""}`}>
+            <div className=" p-2 flex items-center">
+              <img src={playerIconsInp[email]} alt="Player Icon" className="w-8 h-8 items-center mx-5 rounded-full border-gray-700" />
+              <div>
+                <div className='font-bold'>{character}</div>
+                <div className="truncate text-xs">{email}</div>
+              </div>
             </div>
           </div>
         ))}
+        </div>
 
         {/* Room Dropdown */}
-        <div className="relative mb-4 mt-4">
+        <h2 className=" my-4 font-bold">Actions:</h2>
+        <div className="relative my-4">
           <select
             value={selectedRoom}
             onChange={(e) => setSelectedRoom(e.target.value)}
@@ -313,158 +275,25 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           <button onClick={() => handleSkip()} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">Skip</button>
         </div>
 
-        {/* <div className="mt-4">
-          Player&apos;s turn: {whoseTurn}
-        </div> */}
-        <div className="my-2">
-          <strong className="text-gray-700">Server Response:</strong> {serverResponse}
-        </div>
-        <div className="my-2">
-          <strong className="text-gray-700">Latest Action:</strong> {mostRecentAction}
+        <div className='grid grid-cols-1 justify-start p-4 bg-slate-900 shadow my-10'>
+          <div className="my-2">
+            <strong className="text-gray-700">Server Response:</strong> {serverResponse}
+          </div>
+          <div className="my-2">
+            <strong className="text-gray-700">Latest Action:</strong> {mostRecentAction}
+          </div>
         </div>
 
       </div>
+
+      <GameBoard 
+        playerCoords={playerCoords} 
+        whoseTurn={whoseTurn}
+        handleRoomMoveClick={handleRoomMoveClick}
+        gameid={gameid}
+      />
       
-      {/* Game Board */}
-        <div className="w-240"> {/* 2 times wider than the left column */}
-          <div className="grid grid-cols-5 gap-2"> {/* 2 times wider grid */}
-            {Array.from({ length: 25 }, (_, index) => {
-              const coords = findCoords(index);
-              const emails = getEmailsFromCoords(coords, playerCoords);
-              const roomName = roomCoordinates[`${coords[0]},${coords[1]}`]?.name || '';
-              const backgroundImage = roomImages[roomName];
-              const renderStudySecretPassage = index === 0;
-              const renderLoungeSecretPassage = index === 4;
-              const renderConservatorySecretPassage = index === 20;
-              const renderKitchenSecretPassage = index === 24;
-
-              if (index === 6 || index === 8 || index === 16 || index === 18) {
-                return (
-                  <div key={index} ></div> // Render a blank spot
-                );
-              }
-              if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
-                return (
-                  <div
-                    key={index}
-                    className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                    style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
-                    onMouseEnter={() => handleMouseEnter(index)}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleRoomMoveClick(coords)}
-                  >
-                    <div className="font-bold">{roomName}</div>
-                    <div className="flex">
-                      {emails.map((email, i) => (
-                        <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}/>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              if (index === 5 || index === 7 || index === 9 || index === 15 || index === 17 || index === 19) {
-                return (
-                  <div
-                    key={index}
-                    className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                    style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
-                    onMouseEnter={() => handleMouseEnter(index)}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleRoomMoveClick(coords)}
-                  >
-                    <div className="font-bold">{roomName}</div>
-                    <div className="flex flex-col">
-                      {emails.map((email, i) => (
-                        <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full my-1" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}/>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }          
-              return (
-                <div 
-                key={index}
-                className="relative"
-                >
-                  {renderStudySecretPassage && (
-                    <div 
-                      className={`absolute bottom-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -1 ? 'opacity-70' : ''}`}
-                      onMouseEnter={() => handleMouseEnter(-1)}
-                      onMouseLeave={handleMouseLeave}
-                      onClick={() => handleRoomMoveClick([4,4])}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(180deg)' }}>
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M7 7l10 10" />
-                        <path d="M16 7l-9 0l0 9" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {renderLoungeSecretPassage && (
-                    <div 
-                      className={`absolute bottom-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -2 ? 'opacity-70' : ''}`}
-                      onMouseEnter={() => handleMouseEnter(-2)}
-                      onMouseLeave={handleMouseLeave}
-                      onClick={() => handleRoomMoveClick([4,0])}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(270deg)' }}>
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M7 7l10 10" />
-                        <path d="M16 7l-9 0l0 9" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {renderConservatorySecretPassage && (
-                    <div 
-                      className={`absolute top-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -3 ? 'opacity-70' : ''}`}
-                      onMouseEnter={() => handleMouseEnter(-3)}
-                      onMouseLeave={handleMouseLeave}
-                      onClick={() => handleRoomMoveClick([0,4])}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(90deg)' }}>
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M7 7l10 10" />
-                        <path d="M16 7l-9 0l0 9" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {renderKitchenSecretPassage && (
-                    <div 
-                      className={`absolute top-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -4 ? 'opacity-70' : ''}`}
-                      onMouseEnter={() => handleMouseEnter(-4)}
-                      onMouseLeave={handleMouseLeave}
-                      onClick={() => handleRoomMoveClick([0,0])}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M7 7l10 10" />
-                        <path d="M16 7l-9 0l0 9" />
-                      </svg>
-                    </div>
-                  )}
-
-                  <div 
-                    className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                    style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
-                    onMouseEnter={() => handleMouseEnter(index)}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleRoomMoveClick(coords)}
-                  >
-                    <div className="font-bold">{roomName}</div>
-                    <div className="flex">
-                      {emails.map((email, i) => (
-                        <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 10px lime)' } : {}}/>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      
 
         {/* Clue notes interface */}
         {isClueNotesOpen ? (
@@ -570,34 +399,9 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   );
 }
 
-// Function to find coordinates for a given index
-function findCoords(index: number): [number, number] {
-  const row = Math.floor(index / 5);
-  const col = index % 5;
-  return [row, col];
-}
 
-// Function to get the emails associated with the coordinates
-function getEmailsFromCoords(coords: [number, number], playerCoords: { [email: string]: number[][] }): string[] {
-  const [row, col] = coords;
-  const emails: string[] = [];
 
-  if (!playerCoords) {
-    return emails;
-  }
 
-  for (const [email, coordsList] of Object.entries(playerCoords)) {
-    if (!coordsList) {
-      continue;
-    }
-
-    if (coordsList.some(coord => coord[0] === row && coord[1] === col)) {
-      emails.push(email);
-    }
-  }
-
-  return emails;
-}
 
 const suspectNames = [
   'Miss Scarlet', 'Professor Plum', 'Mrs. Peacock',
