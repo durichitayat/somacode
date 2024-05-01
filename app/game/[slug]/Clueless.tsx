@@ -28,31 +28,31 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedWeapon, setSelectedWeapon] = useState('');
 
-  const fetchStatus = async () => {
-    if (whoseTurn !== email) {
-      try {
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          body: JSON.stringify({ 
-            gameid: gameid,
-            email: "fetchStatus",
-            playerMove: "fetchStatus"
-          }),
-        });
-        const responseData = await response.json();
-        const fetchedTurnData = responseData.currentTurn;
-        const fetchedPlayerCoordsData = responseData.playerCoords;
-        const fetchedMostRecentAction = responseData.mostRecentAction;
-        setPlayerCoords(fetchedPlayerCoordsData);
-        setMostRecentAction(() => fetchedMostRecentAction);
-        setWhoseTurn(() => fetchedTurnData);
-      } catch (error) {
-        console.error('An error occurred:', error);
-      }
-    }
-  }
-
   useEffect(() => {
+    const fetchStatus = async () => {
+      if (whoseTurn !== email) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify({ 
+              gameid: gameid,
+              email: "fetchStatus",
+              playerMove: "fetchStatus"
+            }),
+          });
+          const responseData = await response.json();
+          const fetchedTurnData = responseData.currentTurn;
+          const fetchedPlayerCoordsData = responseData.playerCoords;
+          const fetchedMostRecentAction = responseData.mostRecentAction;
+          setPlayerCoords(fetchedPlayerCoordsData);
+          setMostRecentAction(() => fetchedMostRecentAction);
+          setWhoseTurn(() => fetchedTurnData);
+        } catch (error) {
+          console.error('An error occurred:', error);
+        }
+      }
+    };
+
     fetchStatus();
     const intervalId = setInterval(fetchStatus, 5000);
 
@@ -60,38 +60,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     return () => {
       clearInterval(intervalId);
     };
-  }, [fetchStatus, whoseTurn, email, gameid]);
-
-  // const handleMoveSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  //   // playerCoords['michael-dobroski@outlook.com'] = [[4,4]]
-  //   e.preventDefault();
-  //   if (inputValue.trim() === '') return;
-    
-  //   try {
-  //     const response = await fetch(apiUrl, {
-  //       method: 'POST',
-  //       body: JSON.stringify({ 
-  //         gameid: gameid, 
-  //         email: email,
-  //         playerMove: inputValue
-  //       }),
-  //     });
-  //     const responseData = await response.json();
-  //     const fetchedTurnData = responseData.currentTurn;
-  //     const fetchedPlayerCoordsData = responseData.playerCoords;
-  //     const fetchedServerResponse = responseData.result;
-  //     const fetchedMostRecentAction = responseData.mostRecentAction;
-  //     setPlayerCoords(fetchedPlayerCoordsData);
-  //     setWhoseTurn(() => fetchedTurnData);
-  //     setServerResponse(() => fetchedServerResponse);
-  //     setMostRecentAction(() => fetchedMostRecentAction);
-  //     setInputValue('');
-  //   } catch (error) {
-  //     console.error('An error occurred:', error);
-  //     setServerResponse(() => 'An error occurred: ' + error);
-  //     setInputValue('');
-  //   }
-  // };
+  }, [whoseTurn, email, gameid]);
 
   const handleSuggest = async () => {
     try {
