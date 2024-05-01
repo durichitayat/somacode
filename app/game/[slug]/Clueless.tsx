@@ -325,7 +325,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
       </div>
       
-
+      {/* Game Board */}
         <div className="w-240"> {/* 2 times wider than the left column */}
           <div className="grid grid-cols-5 gap-2"> {/* 2 times wider grid */}
             {Array.from({ length: 25 }, (_, index) => {
