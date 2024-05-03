@@ -28,7 +28,7 @@ export async function GET (req: Request) {
     // console.log("game: ", game);
 
 
-    return NextResponse.json({ game }, {status: 200});
+    return NextResponse.json({ game, gameid }, {status: 200});
   } catch (error) {
     return NextResponse.json({ error: error }, {status: 500});
   }

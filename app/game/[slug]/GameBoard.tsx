@@ -121,19 +121,15 @@ interface Player {
   }
 
 interface GameBoardProps {
-    playerCoords: any;
-    whoseTurn: string | undefined;
-    handleRoomMoveClick: (y:number, x:number) => Promise<void>;
-    gameid: string;
+    handleRoomMoveClick: (y:number, x:number, email:string, gameid:string) => Promise<void>;
     gameData: any;
+    email: string;
   }
 
 const GameBoard: React.FC<GameBoardProps> = ({ 
-    playerCoords, 
-    whoseTurn, 
     handleRoomMoveClick, 
-    gameid, 
-    gameData
+    gameData, 
+    email
   }) => {
 
     const [players, setPlayers] = useState<Player[]>([]);
@@ -144,7 +140,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
         }
     }, [gameData]);
 
-    // console.log(gameData);
 
     return (
         <>
@@ -155,10 +150,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
                 <div key={index} className="">
                     {room?.img !== null ?
                         ( 
-                            
                             <>
-                                {/* if Player xcoord and ycoord match room x and y, then show player */}
-                                <div className="relative cursor-pointer bg-white">
+                                <a 
+                                    className="relative cursor-pointer bg-white"
+                                    onClick={() => handleRoomMoveClick(room.y, room.x, email, gameData.gameid )}
+                                >
                                     <img src={room?.img} alt={room?.name || ""} className="w-28 h-28 object-cover " />
                                     <p className="absolute inset-0 flex items-center justify-center text-center opacity-0 shadow hover:opacity-100 hover:bg-purple-800 transition-all text-xs">{room.name}</p>
 
@@ -172,7 +168,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
                                             )
                                         }
                                     })}
-                                </div>
+                                </a>
                             </>
                         ) : (
                             <div className="w-28 h-28 bg-gray-300"></div>

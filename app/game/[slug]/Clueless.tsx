@@ -57,7 +57,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           // setMostRecentAction(() => fetchedMostRecentAction);
           // setWhoseTurn(() => fetchedTurnData);
           
-          // console.log('responseData:', responseData);
+          console.log('responseData:', responseData);
         } catch (error) {
           console.error('An error occurred:', error);
         }
@@ -65,7 +65,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     };
 
     fetchStatus();
-    const intervalId = setInterval(fetchStatus, 50000);
+    const intervalId = setInterval(fetchStatus, 5000);
 
     // Clear the interval on component unmount or before creating a new interval
     return () => {
@@ -73,16 +73,16 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     };
   }, [whoseTurn, email, gameid, apiUrl]);
 
-  const handleRoomMoveClick = async (y: number, x: number) => {
+  const handleRoomMoveClick = async (y: number, x: number, email: string, gameid: string) => {
     alert(`you moved to y: ${y}, x: ${x}`);
     try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
+      const response = await fetch('/api/game/move', {
+        method: 'PATCH',
         body: JSON.stringify({ 
           gameid: gameid, 
           email: email,
+          y: y,
           x: x,
-          y: y
         }),
       });
       const responseData = await response.json();
@@ -298,10 +298,8 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
       </div>
 
       <GameBoard 
-        playerCoords={playerCoords} 
-        whoseTurn={whoseTurn}
         handleRoomMoveClick={handleRoomMoveClick}
-        gameid={gameid}
+        email={email}
         gameData={gameData}
       />
       
