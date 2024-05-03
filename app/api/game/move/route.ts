@@ -1,7 +1,7 @@
 import { sql } from "@vercel/postgres";
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT
+// PATCH /api/game/move
 export async function PATCH (req: Request) {
     try {
       console.log("POST /api/game/move/route.ts");
@@ -10,7 +10,7 @@ export async function PATCH (req: Request) {
       // Update player's coordinates
       await sql`UPDATE Players SET xcoord = ${x}, ycoord = ${y} WHERE email = ${email} AND gameid = ${gameid}`;
   
-      return NextResponse.json({ message: "message" }, {status: 200});
+      return NextResponse.json({ message: `${email} moved to y:${y}, x:${x}` }, {status: 200});
     } catch (error) {
       return NextResponse.json({ error: error }, {status: 500});
     }

@@ -122,23 +122,33 @@ interface Player {
 
 interface GameBoardProps {
     handleRoomMoveClick: (y:number, x:number, email:string, gameid:string) => Promise<void>;
-    gameData: any;
+    playerData: any;
     email: string;
   }
 
+/**
+ * Represents the game board component.
+ *
+ * @component
+ * @param {Object} props - The component props.
+ * @param {Function} props.handleRoomMoveClick - The function to handle room move click event.
+ * @param {Object} props.playerData - The player data object.
+ * @param {string} props.email - The email of the player.
+ * @returns {JSX.Element} The rendered component.
+ */
 const GameBoard: React.FC<GameBoardProps> = ({ 
     handleRoomMoveClick, 
-    gameData, 
+    playerData, 
     email
   }) => {
 
     const [players, setPlayers] = useState<Player[]>([]);
 
     useEffect(() => {
-        if (gameData && gameData.game) {
-            setPlayers(gameData.game);
+        if (playerData && playerData.game) {
+            setPlayers(playerData.game);
         }
-    }, [gameData]);
+    }, [playerData]);
 
 
     return (
@@ -150,26 +160,26 @@ const GameBoard: React.FC<GameBoardProps> = ({
                 <div key={index} className="">
                     {room?.img !== null ?
                         ( 
-                            <>
-                                <a 
-                                    className="relative cursor-pointer bg-white"
-                                    onClick={() => handleRoomMoveClick(room.y, room.x, email, gameData.gameid )}
-                                >
-                                    <img src={room?.img} alt={room?.name || ""} className="w-28 h-28 object-cover " />
-                                    <p className="absolute inset-0 flex items-center justify-center text-center opacity-0 shadow hover:opacity-100 hover:bg-purple-800 transition-all text-xs">{room.name}</p>
+                        <>
+                        <a 
+                            className="relative cursor-pointer bg-white"
+                            onClick={() => handleRoomMoveClick(room.y, room.x, email, playerData.gameid )}
+                        >
+                            <img src={room?.img} alt={room?.name || ""} className="w-28 h-28 object-cover " />
+                            <p className="absolute inset-0 flex items-center justify-center text-center opacity-0 shadow hover:opacity-100 hover:bg-purple-800 transition-all text-xs">{room.name}</p>
 
-                                    {players.map((player, playerIndex) => {
-                                        if (player.xcoord === room.x && player.ycoord === room.y) {
-                                            return (
-                                                <div key={playerIndex} className=" absolute top-0 left-0 w-full h-full items-center justify-center text-center text-xs bg-black/70 flex">
-                                                    <div className=" bg-purple-700 w-4 h-4 rounded-full mx-1"></div>
-                                                    <div>{player.character}</div>
-                                                </div>
-                                            )
-                                        }
-                                    })}
-                                </a>
-                            </>
+                            {players.map((player, playerIndex) => {
+                                if (player.xcoord === room.x && player.ycoord === room.y) {
+                                    return (
+                                        <div key={playerIndex} className=" absolute top-0 left-0 w-full h-full items-center justify-center text-center text-xs bg-black/70 flex">
+                                            <div className=" bg-purple-700 w-4 h-4 rounded-full mx-1"></div>
+                                            <div>{player.character}</div>
+                                        </div>
+                                    )
+                                }
+                            })}
+                        </a>
+                        </>
                         ) : (
                             <div className="w-28 h-28 bg-gray-300"></div>
                         )

@@ -24,11 +24,11 @@ export async function GET (req: Request) {
       return NextResponse.json({ result: "" }, {status: 400})
     }
 
-    const { rows: game } = await sql`SELECT * FROM Players WHERE gameid = ${gameid}`;
+    const { rows: players } = await sql`SELECT * FROM Players WHERE gameid = ${gameid}`;
     // console.log("game: ", game);
 
 
-    return NextResponse.json({ game, gameid }, {status: 200});
+    return NextResponse.json({ players, gameid }, {status: 200});
   } catch (error) {
     return NextResponse.json({ error: error }, {status: 500});
   }

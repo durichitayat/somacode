@@ -15,6 +15,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   const apiUrl = `${getApiBaseUrl()}/api/game?gameid=${gameid}`;
 
   const [gameData, setGameData] = useState<any>();
+  const [playerData, setPlayerData] = useState<any>();
 
   const [whoseTurn, setWhoseTurn] = useState<string>();
   const [serverResponse, setServerResponse] = useState<string>('');
@@ -35,28 +36,16 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     const fetchStatus = async () => {
       if (whoseTurn !== email) {
         try {
-          const response: Response = await fetch(apiUrl, { 
+          const response: Response = await fetch(`/api/game/players?gameid=${gameid}`, { 
             method: 'GET'
           });
-
-          // console.log('response:', response);
 
           if (!response.ok) {
             console.error('Server response:', response.status, response.statusText);
             return;
           }
-
           const responseData = await response.json();
-
-          setGameData(responseData);
-
-          // const fetchedTurnData = responseData.currentTurn;
-          // const fetchedPlayerCoordsData = responseData.playerCoords;
-          // const fetchedMostRecentAction = responseData.mostRecentAction;
-          // setPlayerCoords(fetchedPlayerCoordsData);
-          // setMostRecentAction(() => fetchedMostRecentAction);
-          // setWhoseTurn(() => fetchedTurnData);
-          
+          setPlayerData(responseData);
           console.log('responseData:', responseData);
         } catch (error) {
           console.error('An error occurred:', error);
@@ -86,15 +75,6 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         }),
       });
       const responseData = await response.json();
-      const fetchedTurnData = responseData.currentTurn;
-      const fetchedPlayerCoordsData = responseData.playerCoords;
-      const fetchedServerResponse = responseData.result;
-      const fetchedMostRecentAction = responseData.mostRecentAction;
-      setPlayerCoords(fetchedPlayerCoordsData);
-      setWhoseTurn(() => fetchedTurnData);
-      setServerResponse(() => fetchedServerResponse);
-      setMostRecentAction(() => fetchedMostRecentAction);
-      setInputValue('');
     } catch (error) {
       console.error('An error occurred:', error);
       setServerResponse(() => 'An error occurred: ' + error);
@@ -300,7 +280,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
       <GameBoard 
         handleRoomMoveClick={handleRoomMoveClick}
         email={email}
-        gameData={gameData}
+        playerData={playerData}
       />
       
       
