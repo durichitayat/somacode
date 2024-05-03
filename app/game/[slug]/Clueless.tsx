@@ -10,10 +10,12 @@ const getApiBaseUrl = () => {
   return isProduction ? 'https://somacode.vercel.app/' : 'http://localhost:3000';
 };
 
-// Construct API URL
-const apiUrl = `${getApiBaseUrl()}/api/game`;
-
 export default function Clueless({ gameid, email, cards, playerCoordsInp, playerCharsInp, playerIconsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] }, playerCharsInp: { [email: string]: string }, playerIconsInp: { [email: string]: string } }) {
+  // Construct API URL
+  const apiUrl = `${getApiBaseUrl()}/api/game?gameid=${gameid}`;
+
+  const [gameData, setGameData] = useState<any>();
+
   const [whoseTurn, setWhoseTurn] = useState<string>();
   const [serverResponse, setServerResponse] = useState<string>('');
   const [mostRecentAction, setMostRecentAction] = useState<string>('');
@@ -33,21 +35,29 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     const fetchStatus = async () => {
       if (whoseTurn !== email) {
         try {
-          const response = await fetch(apiUrl, {
-            method: 'POST',
-            body: JSON.stringify({ 
-              gameid: gameid,
-              email: "fetchStatus",
-              playerMove: "fetchStatus"
-            }),
+          const response: Response = await fetch(apiUrl, { 
+            method: 'GET'
           });
+
+          // console.log('response:', response);
+
+          if (!response.ok) {
+            console.error('Server response:', response.status, response.statusText);
+            return;
+          }
+
           const responseData = await response.json();
-          const fetchedTurnData = responseData.currentTurn;
-          const fetchedPlayerCoordsData = responseData.playerCoords;
-          const fetchedMostRecentAction = responseData.mostRecentAction;
-          setPlayerCoords(fetchedPlayerCoordsData);
-          setMostRecentAction(() => fetchedMostRecentAction);
-          setWhoseTurn(() => fetchedTurnData);
+
+          setGameData(responseData);
+
+          // const fetchedTurnData = responseData.currentTurn;
+          // const fetchedPlayerCoordsData = responseData.playerCoords;
+          // const fetchedMostRecentAction = responseData.mostRecentAction;
+          // setPlayerCoords(fetchedPlayerCoordsData);
+          // setMostRecentAction(() => fetchedMostRecentAction);
+          // setWhoseTurn(() => fetchedTurnData);
+          
+          // console.log('responseData:', responseData);
         } catch (error) {
           console.error('An error occurred:', error);
         }
@@ -55,23 +65,24 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
     };
 
     fetchStatus();
-    const intervalId = setInterval(fetchStatus, 5000);
+    const intervalId = setInterval(fetchStatus, 50000);
 
     // Clear the interval on component unmount or before creating a new interval
     return () => {
       clearInterval(intervalId);
     };
-  }, [whoseTurn, email, gameid]);
+  }, [whoseTurn, email, gameid, apiUrl]);
 
-  const handleRoomMoveClick = async (coords: [number, number]) => {
-    const coordsString: string = `[${coords[0]}, ${coords[1]}]`;
+  const handleRoomMoveClick = async (y: number, x: number) => {
+    alert(`you moved to y: ${y}, x: ${x}`);
     try {
       const response = await fetch(apiUrl, {
         method: 'POST',
         body: JSON.stringify({ 
           gameid: gameid, 
           email: email,
-          playerMove: coordsString
+          x: x,
+          y: y
         }),
       });
       const responseData = await response.json();
@@ -291,6 +302,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         whoseTurn={whoseTurn}
         handleRoomMoveClick={handleRoomMoveClick}
         gameid={gameid}
+        gameData={gameData}
       />
       
       
@@ -394,8 +406,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         )}
 
 
-      </div>
-
+    </div>
   );
 }
 

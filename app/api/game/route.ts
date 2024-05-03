@@ -1,5 +1,6 @@
 import { sql } from "@vercel/postgres";
-import { NextResponse } from 'next/server';
+import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from 'next/server';
 
 {/***************
   * This is more of a proof of concept than anything.
@@ -12,8 +13,29 @@ import { NextResponse } from 'next/server';
   * So every call to this API must contain the gameid, email (user intentifier), and playerMove (gives insight into the player's move)
   ***************/}
 
-export async function POST (request: Request) { // this will contain most game logic so keep it tidy! functions wherever you can
+// GET
+export async function GET (req: Request) {
+  try {
+    console.log("GET request received.");
+    const url = new URL(req.url);
+    const gameid = url.searchParams.get('gameid');
+    // console.log("gameid: ", gameid);
+    if (!gameid) {
+      return NextResponse.json({ result: "" }, {status: 400})
+    }
 
+    const { rows: game } = await sql`SELECT * FROM Players WHERE gameid = ${gameid}`;
+    // console.log("game: ", game);
+
+
+    return NextResponse.json({ game }, {status: 200});
+  } catch (error) {
+    return NextResponse.json({ error: error }, {status: 500});
+  }
+}
+
+// POST
+export async function POST (request: Request) { // this will contain most game logic so keep it tidy! functions wherever you can
   try {
 
     // get player move info and log
@@ -126,9 +148,9 @@ export async function POST (request: Request) { // this will contain most game l
   } catch (error) {
     return NextResponse.json({error}, {status: 500});
   }
-
 }
 
+// PUT
 export async function PUT (request: Request) {
 
   try {
@@ -173,6 +195,7 @@ export async function PUT (request: Request) {
   }
 
 }
+
 
 type GameRequestBody = {
   gameid: string;
