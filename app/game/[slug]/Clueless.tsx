@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 import { useState, useEffect } from 'react';
 import GameBoard from './GameBoard';
@@ -255,7 +256,7 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
             const { email, character } = player;
             return (
               <div key={index} className={`grid grid-cols-1 justify-start ${whoseTurn === email ? "bg-green-800" : ""}`}>
-                <div className=" p-2 flex items-center">
+                <div className="p-2 flex items-center">
                   <img src={""} alt="Player Icon" className="w-8 h-8 bg-gray-200 items-center mx-5 rounded-full border-gray-700" />
                   <div>
                     <div className='font-bold'>{character}</div>
