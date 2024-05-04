@@ -73,25 +73,25 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
           const response: Response = await fetch(`/api/game?gameid=${gameid}`, { 
             method: 'GET'
           });
-  
+
           const responseData = await response.json();
-  
+
           if (responseData !== gameData) {
             const numPlayers = playerData?.players.length;
             const turnCount = responseData?.games[0].turncount;
-  
-            // Add 1 because player numbers start from 1
-            const playerOrder = (turnCount % numPlayers) + 1;
-            
+
+            // Calculate playerOrder based on turnCount
+            const playerOrder = turnCount % numPlayers;
+
             // Find the player whose turn it is
-            const currentPlayer = playerData.players.find(player => player.turnorder === playerOrder);
-  
+            const currentPlayer = playerData.players[playerOrder].email;
+
             // Set whoseTurn to the email of the current player
-            setWhoseTurn(currentPlayer?.email);
+            setWhoseTurn(currentPlayer);
             setGameData(responseData);
             console.log("gameData:", responseData);
           }
-  
+
         } catch (error) {
           console.error('An error occurred:', error);
         }
@@ -235,7 +235,6 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
             return (
             <div key={index} className={`grid grid-cols-1 justify-start `}>
                 {cards ? cards.sort((a, b) => a.type.localeCompare(b.type)).map((card: any, index: number ) => (
-                    console.log("Clueless.tsx card:", card),
                     <div key={index}  className="grid  my-2 ml-4">
                         <p className='text-sm '>{card.name}</p>
                         <p className='text-xs text-slate-500'>{card.type}</p>
