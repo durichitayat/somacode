@@ -158,7 +158,7 @@ export async function PUT (request: Request) {
     const { gameid, email, gameData, playerData } = await request.json();
     if ((gameData.games[0].gameowner === email ?? "") && gameData.games[0].gamestate == 'open') {
 
-      const { playerCount, playerEmails } = await getPlayerCountEmails(gameid);
+      const { playerCount, playerEmails } = await getPlayerCountEmails(playerData);
 
       // close the game state from new players joining and set TurnCount
       // anything that isn't 'open' corresponds to 'closed'. we use this field to indicate what type of turn a player can make. we always start with a move
@@ -168,7 +168,7 @@ export async function PUT (request: Request) {
         WHERE GameID = ${gameid}`;
 
       const { solutionCards, playerCards, playerCharacters } = distributeClueCards(playerCount, allClueCards);
-
+ 
       await setSolutionCards(gameid, solutionCards);
       await setPlayerCards(playerEmails, playerCards);
       await setPlayerTurns(playerEmails);
@@ -312,7 +312,8 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
 
 async function getPlayerCountEmails(playerData: any): Promise<{ playerCount: number, playerEmails: string[] }> {
   try {
-    const playerEmails = playerData.players.map((player: any) => player.email);
+    console.log("/api/game playerData: ", playerData);
+    const playerEmails = playerData?.players.map((player: any) => player.email);
 
     return { playerCount: playerEmails.length, playerEmails };
   } catch (error) {
@@ -349,29 +350,33 @@ async function getPlayerCards(email: string): Promise<string[][]> {
   }
 }
 
-async function setPlayerCards(playerEmails: string[], playerCards: string[][][]): Promise<void> {
+type PlayerCard = {
+  email: string;
+  cards: string[];
+};
 
+async function setPlayerCards(playerCards: PlayerCard[]): Promise<void> {
   try {
-    let i = 0;
-    for (const email of playerEmails) {
+    for (const playerCard of playerCards) {
+      // Check that playerCard.cards is defined and is an array
+      if (!Array.isArray(playerCard.cards)) {
+        console.error(`Invalid cards for player ${playerCard.email}: ${playerCard.cards}`);
+        continue;
+      }
 
       // Get the cards array for the current player
-      const cardsArray = playerCards[i];
-      const cardsString = cardsArray.map(innerArray => `ARRAY['${innerArray.join("', '")}']`).join(',');
+      const cardsString = `'${playerCard.cards.join("', '")}'`;
 
       // Run the SQL query to update player cards
       await sql`
         UPDATE Players
-        SET cards = ARRAY[${cardsString}]
-        WHERE email = ${email};`;
-
-      i++;
+        SET cards = [${cardsString}]
+        WHERE email = ${playerCard.email};`;
     }
   } catch (error) {
     console.error('An error occurred:', error);
     throw error;
   }
-
 }
 
 async function setPlayerTurns(playerEmails: string[]): Promise<void> {

@@ -33,30 +33,7 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
   const [selectedSuspect, setSelectedSuspect] = useState('');
   const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedWeapon, setSelectedWeapon] = useState('');
-
-
-  // FETCH GAME DATA
-  useEffect(() => {
-    const fetchGame = async () => {
-      try {
-        const response: Response = await fetch(`/api/game?gameid=${gameid}`, { 
-          method: 'GET'
-        });
-
-        const responseData = await response.json();
-        console.log("Clueless.tsx responseData:", responseData);
-
-        setGameData(responseData);
-        console.log("Clueless.tsx gameData inside useEffect:", gameData);
-        
-      } catch (error) {
-        console.error('An error occurred:', error);
-      }
-    }
-
-    fetchGame();
-  }, [gameid]);
-  console.log("Clueless.tsx gameData:", gameData);
+  
 
   // FETCH PLAYER DATA
   useEffect(() => {
@@ -72,7 +49,6 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
           }
           const responseData = await response.json();
           setPlayerData(responseData);
-          console.log('responseData:', responseData);
         } catch (error) {
           console.error('An error occurred:', error);
         }
@@ -80,13 +56,52 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
 
     fetchPlayers();
     const intervalId = setInterval(fetchPlayers, 50000);
-
+    console.log("Clueless.tsx playerData:", playerData);
     // Clear the interval on component unmount or before creating a new interval
     return () => {
       clearInterval(intervalId);
     };
-  }, [email, gameid, apiUrl]);
-  console.log("Clueless.tsx playerData:", playerData);
+  }, [whoseTurn, gameid, email]);
+  
+
+  // FETCH GAME DATA
+  useEffect(() => {
+      const fetchGame = async () => {
+        try {
+          const response: Response = await fetch(`/api/game?gameid=${gameid}`, { 
+            method: 'GET'
+          });
+  
+          const responseData = await response.json();
+  
+          if (responseData !== gameData) {
+            const numPlayers = playerData?.players.length;
+            const turnCount = responseData?.games[0].turncount;
+  
+            // Add 1 because player numbers start from 1
+            const playerOrder = (turnCount % numPlayers) + 1;
+            
+            // Find the player whose turn it is
+            console.log("getGameData Clueless.tsx playerData:", playerData);
+            const currentPlayer = playerData.players.find(player => player.turnorder === playerOrder);
+  
+            // Set whoseTurn to the email of the current player
+            setWhoseTurn(currentPlayer?.email);
+            setGameData(responseData);
+          }
+  
+          console.log("Clueless.tsx gameData inside useEffect:", gameData);   
+        } catch (error) {
+          console.error('An error occurred:', error);
+        }
+      }
+  
+      fetchGame();
+      console.log("Clueless.tsx currentPlayer:", whoseTurn);
+      console.log("Clueless.tsx gameData:", gameData);
+    }, [playerData, gameid, email]);
+
+
 
   // START GAME FUNCTION
   const handleStart = async (email: string, gameid: string) => {
@@ -201,7 +216,8 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
             <h2 className="text-2xl font-bold">{gameData?.games[0].gamename}</h2>
             <p className='text-xs text-gray-500'>Created: {gameData?.games[0].created_at}</p>
             <p className='text-xs text-gray-500'>Owner: {gameData?.games[0].gameowner}</p>
-            <p className='text-xs text-yellow-500'>Status: {gameData?.games[0].gamestate}</p>
+            <p className='text-xs text-gray-500'>Status: {gameData?.games[0].gamestate}</p>
+            <p className='text-xs text-yellow-500'>Turn Count: {gameData?.games[0].turncount}</p>
           </div>
           {gameData && gameData?.games[0].gamestate === 'open' && (
             (email === gameData?.games[0].gameowner && playerData?.players.length > 1) 
