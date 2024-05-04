@@ -121,23 +121,11 @@ interface Player {
   }
 
 interface GameBoardProps {
-    handleRoomMoveClick: (y:number, x:number, email:string, gameid:string) => Promise<void>;
     playerData: any;
     email: string;
   }
 
-/**
- * Represents the game board component.
- *
- * @component
- * @param {Object} props - The component props.
- * @param {Function} props.handleRoomMoveClick - The function to handle room move click event.
- * @param {Object} props.playerData - The player data object.
- * @param {string} props.email - The email of the player.
- * @returns {JSX.Element} The rendered component.
- */
 const GameBoard: React.FC<GameBoardProps> = ({ 
-    handleRoomMoveClick, 
     playerData, 
     email
   }) => {
@@ -149,6 +137,24 @@ const GameBoard: React.FC<GameBoardProps> = ({
             setPlayers(playerData.game);
         }
     }, [playerData]);
+
+    const handleRoomMoveClick = async (y: number, x: number, email: string, gameid: string) => {
+        alert(`you moved to y: ${y}, x: ${x}`);
+        try {
+          const response = await fetch('/api/game/move', {
+            method: 'PATCH',
+            body: JSON.stringify({ 
+              gameid: gameid, 
+              email: email,
+              y: y,
+              x: x,
+            }),
+          });
+          const responseData = await response.json();
+        } catch (error) {
+          console.error('An error occurred:', error);
+        }
+    };
 
 
     return (

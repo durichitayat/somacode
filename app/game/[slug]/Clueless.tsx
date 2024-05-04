@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import GameBoard from './GameBoard';
 import ClueNotes from './ClueNotes';
 
-type NotesGrid = boolean[][];
+
 
 // Function to get base URL
 const getApiBaseUrl = () => {
@@ -25,12 +25,6 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
   // const [mostRecentAction, setMostRecentAction] = useState<string>('');
   // const [inputValue, setInputValue] = useState<string>('');
   // const [playerCoords, setPlayerCoords] = useState<{ [email: string]: number[][] }>(playerCoordsInp);
-  
-  const numPlayers = 2 //playerData.length;
-
-  // const [notes, setNotes] = useState<NotesGrid>(
-  //   Array.from({ length: 21 }, () => Array.from({ length: numPlayers }, () => false))
-  // );
 
   // CLUE NOTES STATE
   const [isClueNotesOpen, setIsClueNotesOpen] = useState(true);
@@ -93,26 +87,23 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
     };
   }, [email, gameid, apiUrl]);
 
-  const handleRoomMoveClick = async (y: number, x: number, email: string, gameid: string) => {
-    alert(`you moved to y: ${y}, x: ${x}`);
+  // START GAME FUNCTION
+  const handleStart = async (email: string, gameid: string) => {
     try {
-      const response = await fetch('/api/game/move', {
+      const response = await fetch('/api/game/start', {
         method: 'PATCH',
         body: JSON.stringify({ 
           gameid: gameid, 
-          email: email,
-          y: y,
-          x: x,
+          email: email
         }),
       });
       const responseData = await response.json();
     } catch (error) {
       console.error('An error occurred:', error);
-      setServerResponse(() => 'An error occurred: ' + error);
-      setInputValue('');
     }
-  };
+};
 
+  // ACCUSE FUNCTIONS
   const handleSuggest = async () => {
     try {
       const response = await fetch(apiUrl, {
@@ -194,11 +185,6 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
     }
   }
 
-  const handleNotesClick = (rowIndex: number, colIndex: number): void => {
-    const updatedNotes: NotesGrid = [...notes];
-    updatedNotes[rowIndex][colIndex] = !updatedNotes[rowIndex][colIndex];
-    setNotes(updatedNotes);
-  };
 
   return (
     <div className="flex items-start gap-8">
@@ -206,46 +192,42 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
       {/* Left Sidebar */}
       <div className="w-96 space-y-4">
 
+        {/* Game Info */}
         <div className='grid grid-cols-1 justify-start p-4 bg-slate-900 shadow'>
           <div>
             <h2 className="text-2xl font-bold">{gameData?.games[0].gamename}</h2>
             <p className='text-xs text-gray-500'>Created: {gameData?.games[0].created_at}</p>
-            <p className='text-xs text-gray-500'>GameOwner: {gameData?.games[0].gameowner}</p>
-            <p className='text-xs text-yellow-500'>Game State: {gameData?.games[0].gamestate}</p>
+            <p className='text-xs text-gray-500'>Owner: {gameData?.games[0].gameowner}</p>
+            <p className='text-xs text-yellow-500'>Status: {gameData?.games[0].gamestate}</p>
           </div>
-          {gameData?.games[0].gamestate === "open" ? (
-            <>
-              <div className="my-2">
-                {/* <strong className="text-gray-700">Server Response:</strong> {serverResponse} */}
-              </div>
-              <div className="my-2">
-                {/* <strong className="text-gray-700">Latest Action:</strong> {mostRecentAction} */}
-              </div>
-            </>
-          ) : (
-          <div className="my-2">
-             {/* <button onClick={startGame} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">Start Game</button>  */}
-          </div>
-          )} 
+          <button onClick={() => handleStart(email, gameid)} className="mt-4 py-2.5 px-5 mx-2 text-white bg-pink-700 hover:bg-pink-600 rounded-full">Start Game</button>
         </div>
-
 
         {/* Your Cards */}
         <div className='grid grid-cols-1 justify-start p-4 bg-slate-900 shadow'>
-          <h2 className=" mb-4 mt-4 font-bold">Your Cards</h2>
-          
-          {/* {cards.map((row, rowIndex) => (
-              <div key={rowIndex}  className="grid  my-2">
-                <p className='font-bold'>{row[1]}</p>
-                <p className='text-xs text-slate-500'>{row[0]}</p>
+          <h2 className="my-2 font-bold">Your Cards</h2>
+          {playerData && playerData.players.map((player: any, index: number) => {
+            const { email, cards } = player;
+            return (
+              <div key={index} className={`grid grid-cols-1 justify-start ${whoseTurn === email ? "bg-green-800" : ""}`}>
+                <div className="flex items-center">
+                  {cards ? cards.map((row: any, rowIndex: number ) => (
+                      <div key={rowIndex}  className="grid  my-2">
+                        <p className='font-bold'>{row[1]}</p>
+                        <p className='text-xs text-slate-500'>{row[0]}</p>
+                      </div>
+                  )) : (
+                    <div className="text-xs text-gray-500">Your cards will be revealed when the game starts</div>
+                  )}
+                </div>
               </div>
-          ))} */}
+            );
+          })}
         </div>
-        
         
         {/* Players */}
         <div className="grid grid-cols-1 justify-start p-4 bg-slate-900 shadow">
-          <h2 className=" my-4 font-bold">Players:</h2>
+          <h2 className=" my-2 font-bold">Players</h2>
           
           {playerData && playerData.players.map((player:any, index:number) => {
             const { email, character } = player;
@@ -263,10 +245,11 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
           })}
         </div>
 
+        {/* Actions */}
         <div className="grid grid-cols-1 justify-start p-4 bg-slate-900 shadow">
 
           {/* Room Dropdown */}
-          <h2 className=" my-4 font-bold">Actions</h2>
+          <h2 className="my-2 font-bold">Actions</h2>
           <div className="relative my-4">
             <select
               value={selectedRoom}
@@ -334,19 +317,18 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
       </div>
 
       <GameBoard 
-        handleRoomMoveClick={handleRoomMoveClick}
         email={email}
         playerData={playerData}
       />
       
-      <ClueNotes />
+      <ClueNotes 
+        email={email}
+        playerData={playerData} 
+      />
 
     </div>
   );
 }
-
-
-
 
 
 const suspectNames = [

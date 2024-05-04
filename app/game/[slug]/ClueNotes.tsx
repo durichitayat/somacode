@@ -1,6 +1,23 @@
 import { useState } from 'react';
 
-export default function ClueNotes() {
+type NotesGrid = boolean[][];
+
+export default function ClueNotes(playerData: any) {
+
+    console.log("ClueNotes.tsx playerData: ", playerData)
+
+    const numPlayers = playerData && playerData.players ? playerData.players.length : 0;
+
+    const [notes, setNotes] = useState<NotesGrid>(
+      Array.from({ length: 21 }, () => Array.from({ length: numPlayers }, () => false))
+    );
+
+    const handleNotesClick = (rowIndex: number, colIndex: number): void => {
+        const updatedNotes: NotesGrid = [...notes];
+        updatedNotes[rowIndex][colIndex] = !updatedNotes[rowIndex][colIndex];
+        setNotes(updatedNotes);
+      };
+    
 
     return (
     <>
