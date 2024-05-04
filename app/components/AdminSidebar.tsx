@@ -50,7 +50,7 @@ export default function AdminSidebar() {
             <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
 
                 <Link href="/">
-                    <Image src="/clueless_logo.png" alt="Clueless" width={200} height={100} className='p-4' />
+                    <Image src="/clueless_logo.png" alt="Clueless" width={200} height={100} className='p-4' priority />
                 </Link>
                 
                 <ul className="space-y-2 font-medium">

@@ -18,10 +18,9 @@ export default async function Lobby( {params}: any ) {
     FROM Players 
     INNER JOIN Users ON Players.email = Users.email
     WHERE gameid = ${params.slug}`;
+
   const { rows: game } = await sql`SELECT * FROM Games WHERE gameid = ${params.slug} LIMIT 1`;
-  // console.log("players: ", rows);
-  // console.log("game: ", game[0] );
-  // console.log(session)
+
   console.log("rows: ", rows)
   console.log("user: ", session.user?.email)
   console.log("gamestate: ", game[0].gamestate)
@@ -86,9 +85,8 @@ export default async function Lobby( {params}: any ) {
               ) : 
               <div>
                 {game[0].gamestate == 'open' && (
-                <LeaveButton gameid={game[0].gameid} email={session.user?.email ?? ""} />
-                )
-                }
+                  <LeaveButton gameid={game[0].gameid} email={session.user?.email ?? ""} />
+                )}
               </div>
             }
 
@@ -96,7 +94,7 @@ export default async function Lobby( {params}: any ) {
               rows.some(row => row.email === session.user?.email) ? (
               <div>
                 <a href={"/game/" + params.slug} className="py-3 px-5 text-white bg-green-700 hover:bg-green-600 rounded-full self-end">
-                { game[0].gamestate == 'open' ? "Start Game" : "Enter Game" }
+                { "Enter Game" }
                 </a> 
               </div>
               ) : <p>Waiting for more players</p>

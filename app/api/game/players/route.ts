@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET
 export async function GET (req: Request) {
   try {
-    console.log("GET request received.");
+    console.log("/game/players GET");
     const url = new URL(req.url);
     const gameid = url.searchParams.get('gameid');
     if (!gameid) {

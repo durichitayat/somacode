@@ -1,7 +1,10 @@
+
+
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import Clueless from "./Clueless";
 import Footer from "@/app/components/Footer";
+import { useEffect } from "react";
 
 export default async function Game( {params}: any ) {
   const session = await getServerSession();
@@ -9,59 +12,15 @@ export default async function Game( {params}: any ) {
     redirect("/api/auth/signin")
   }
 
-  let fetchedCards: any[] = [];
-  let fetchedPlayerCoords: { [email: string]: number[][] } = {};
-  let fetchedPlayerCharacters: { [email: string]: string } = {};
-  let fetchedPlayerIcons: { [email: string]: string } = {};
-
-  // Function to get base URL
-  const getApiBaseUrl = () => {
-    const isProduction = process.env.NODE_ENV === 'production';
-    return isProduction ? 'https://somacode.vercel.app/' : 'http://localhost:3000';
-  };
-
-  // Construct API URL
-  const apiUrl = `${getApiBaseUrl()}/api/game`;
-
-  // get player cards, set player cards if you're the host
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'PUT',
-      body: JSON.stringify({ 
-        gameid: params.slug, 
-        email: session.user?.email ?? "",
-      }),
-    });
-
-    const responseData = await response.json();
-    const fetchedCardsData = responseData.playerCards;
-    const fetchedPlayerCoordsData = responseData.playerCoords;
-    const fetchedPlayerCharactersData = responseData.playerCharacters;
-    const fetchedPlayerIconData = responseData.playerIcons;
-
-    fetchedCards = fetchedCardsData;
-    fetchedPlayerCoords = fetchedPlayerCoordsData;
-    fetchedPlayerCharacters = fetchedPlayerCharactersData;
-    fetchedPlayerIcons = fetchedPlayerIconData;
-
-    // console.log("Player Cards:", fetchedCards);
-    // console.log("Player Coords:", fetchedPlayerCoords);
-    
-  } catch (error) {
-    console.error('An error occurred:', error);
-  }
+  const gameid = params.slug;
 
   return (
-    <main className="flex min-h-s.creen flex-col items-center justify-between p-24 bg-cover bg-center" style={{ backgroundImage: "url('/murder-background.jpg')" }}>
+    <main className="flex min-h-s.creen flex-col items-center justify-between p-24 bg-cover bg-center">
       <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1] items-center"></div>
 
       <Clueless
         gameid={params.slug}
         email={session.user?.email ?? ""}
-        cards={fetchedCards}
-        playerCoordsInp={fetchedPlayerCoords}
-        playerCharsInp={fetchedPlayerCharacters}
-        playerIconsInp={fetchedPlayerIcons}
       />
 
       <Footer />

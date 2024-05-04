@@ -154,15 +154,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
     return (
         <>
         <div className="grid col-1">
-            <h3 className="text-center text-2xl font-bold text-purple-700 py-3">Game Board</h3>
             <div className="grid grid-cols-5 gap-0 border border-purple-700 shadow-2xl">
             {rooms.map((room, index) => (
-                <div key={index} className="">
+                <div key={index} className="bg-white">
                     {room?.img !== null ?
                         ( 
                         <>
                         <a 
-                            className="relative cursor-pointer bg-white"
+                            className="relative cursor-pointer "
                             onClick={() => handleRoomMoveClick(room.y, room.x, email, playerData.gameid )}
                         >
                             <img src={room?.img} alt={room?.name || ""} className="w-28 h-28 object-cover " />
