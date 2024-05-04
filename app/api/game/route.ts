@@ -2,6 +2,16 @@ import { sql } from "@vercel/postgres";
 import { NextApiRequest, NextApiResponse } from "next";
 import { NextRequest, NextResponse } from 'next/server';
 
+{/***************
+  * This is more of a proof of concept than anything.
+  * Page updates every 5 seconds by sending a "fetchstatus" POST to this API.
+  * API then returns the turncount.
+  * This turncount can be incremented by any player sending anything in the chatbox.
+  * This shows that the text-based Clueless game can be seamlessly updated and demonstrates how to interact with the API.
+  * 
+  * As a reminder, our APIs are REST so we don't save state other than in the database.
+  * So every call to this API must contain the gameid, email (user intentifier), and playerMove (gives insight into the player's move)
+  ***************/}
 
 // GET
 export async function GET (req: Request) {
@@ -145,11 +155,8 @@ export async function PUT (request: Request) {
 
   try {
 
-    const { gameid, email } = await request.json();
-
-    // if this is host, then set up everyone's turn order, character, and distribute cards
-    const { rows: game } = await sql`SELECT * FROM Games WHERE gameid = ${gameid} LIMIT 1`;
-    if ((game[0].gameowner === email ?? "") && game[0].gamestate == 'open') {
+    const { gameid, email, gameData, playerData } = await request.json();
+    if ((gameData.games[0].gameowner === email ?? "") && gameData.games[0].gamestate == 'open') {
 
       const { playerCount, playerEmails } = await getPlayerCountEmails(gameid);
 
@@ -157,7 +164,7 @@ export async function PUT (request: Request) {
       // anything that isn't 'open' corresponds to 'closed'. we use this field to indicate what type of turn a player can make. we always start with a move
       await sql`
         UPDATE Games
-        SET GameState = 'move?', TurnCount = ${playerCount}
+        SET GameState = 'In Progress', TurnCount = ${playerCount}
         WHERE GameID = ${gameid}`;
 
       const { solutionCards, playerCards, playerCharacters } = distributeClueCards(playerCount, allClueCards);
@@ -183,6 +190,7 @@ export async function PUT (request: Request) {
   } catch (error) {
     return NextResponse.json({error}, {status: 500});
   }
+
 }
 
 
@@ -302,21 +310,11 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
   return { solutionCards, playerCards, playerCharacters };
 }
 
-async function getPlayerCountEmails(gameid: string): Promise<{ playerCount: number, playerEmails: string[] }> {
+async function getPlayerCountEmails(playerData: any): Promise<{ playerCount: number, playerEmails: string[] }> {
   try {
-    // Run the SQL query to get the player count and emails
-    const { rows } = await sql`
-      SELECT 
-        COUNT(*) as playerCount,
-        ARRAY_AGG(email) as playerEmails
-      FROM Players 
-      WHERE gameid = ${gameid};
-    `;
+    const playerEmails = playerData.players.map((player: any) => player.email);
 
-    const playerCount = rows[0].playercount;
-    const playerEmails = rows[0].playeremails || [];
-
-    return { playerCount, playerEmails };
+    return { playerCount: playerEmails.length, playerEmails };
   } catch (error) {
     console.error('An error occurred:', error);
     throw error;

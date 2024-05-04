@@ -95,7 +95,9 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
         method: 'PUT',
         body: JSON.stringify({ 
           gameid: gameid, 
-          email: email
+          email: email, 
+          gameData: gameData,
+          playerData: playerData
         }),
       });
       const responseData = await response.json();
