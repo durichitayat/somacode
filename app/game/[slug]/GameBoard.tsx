@@ -130,14 +130,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
     email
   }) => {
 
-    const [players, setPlayers] = useState<Player[]>([]);
-
-    useEffect(() => {
-        if (playerData && playerData.game) {
-            setPlayers(playerData.game);
-        }
-    }, [playerData]);
-
     // Move player Function
     const handleRoomMoveClick = async (y: number, x: number, email: string, gameid: string) => {
         alert(`you moved to y: ${y}, x: ${x}`);
@@ -151,48 +143,58 @@ const GameBoard: React.FC<GameBoardProps> = ({
               x: x,
             }),
           });
-          const responseData = await response.json();
+          await response.json();
         } catch (error) {
           console.error('An error occurred:', error);
         }
     };
 
+    // Create a lookup object for players based on their coordinates
+    let playersLookup = {};
+    if (playerData && playerData.players) {
+        playersLookup = playerData.players.reduce((acc: any, player: any) => {
+            console.log("player: ", player);    
+            const key = `${player.xcoord}-${player.ycoord}`;
+            acc[key] = player;
+            return acc;
+        }, {});
+    }
+    console.log("playersLookup: ", playersLookup); 
 
     return (
         <>
         <div className="grid col-1">
             <div className="grid grid-cols-5 gap-0 border border-purple-700 shadow-2xl">
+
+
             {rooms.map((room, index) => (
-                <div key={index} className="bg-white">
-                    {room?.img !== null ?
-                        ( 
-                        <>
-                        <a 
-                            className="relative cursor-pointer "
-                            onClick={() => handleRoomMoveClick(room.y, room.x, email, playerData.gameid )}
-                        >
-                            <img src={room?.img} alt={room?.name || ""} className="w-28 h-28 object-cover " />
-                            <p className="absolute inset-0 flex items-center justify-center text-center opacity-0 shadow hover:opacity-100 hover:bg-purple-800 transition-all text-xs">{room.name}</p>
+            // console.log("room: ", room),
+            <div key={index} className="bg-white">
+                {room?.img !== null ?
+                ( 
+                <>
+                <a 
+                    className="relative cursor-pointer "
+                    onClick={() => handleRoomMoveClick(room.y, room.x, email, playerData.gameid )}
+                >
+                    <img src={room?.img} alt={room?.name || ""} className="w-28 h-28 object-cover " />
+                    <p className="absolute inset-0 flex items-center justify-center text-center opacity-0 shadow hover:opacity-100 hover:bg-purple-800 transition-all text-xs">{room.name}</p>
 
-                            {players.map((player, playerIndex) => {
-                                if (player.xcoord === room.x && player.ycoord === room.y) {
-                                    return (
-                                        <div key={playerIndex} className=" absolute top-0 left-0 w-full h-full items-center justify-center text-center text-xs bg-black/70 flex">
-                                            <div className=" bg-purple-700 w-4 h-4 rounded-full mx-1"></div>
-                                            <div>{player.character}</div>
-                                        </div>
-                                    )
-                                }
-                            })}
-                        </a>
-                        </>
-                        ) : (
-                            <div className="w-28 h-28 bg-gray-300"></div>
-                        )
-                    }
-                </div>
+                    {/* Check if there's a player in the current room */}
+                    {playersLookup[`${room.x}-${room.y}`] && (
+                    <div className="z-10 absolute top-0 left-0 w-full h-full items-center justify-center text-center text-xs bg-black/70 flex">
+                        <div className=" bg-purple-700 w-4 h-4 rounded-full mx-1"></div>
+                        <div>{playersLookup[`${room.x}-${room.y}`].character}</div>
+                    </div>
+                    )}
+                </a>
+                </>
+                ) : (
+                    <div className="w-28 h-28 bg-gray-300"></div>
+                )
+                }
+            </div>
             ))}
-
         </div>
 
     
