@@ -13,6 +13,32 @@ import { NextRequest, NextResponse } from 'next/server';
   * So every call to this API must contain the gameid, email (user intentifier), and playerMove (gives insight into the player's move)
   ***************/}
 
+type PlayerCard = { email: string, cards: Card[] };
+type Card = { type: string, name: string }
+const allClueCards: Card[] = [
+  { type: 'Weapon', name: 'Revolver' },
+  { type: 'Weapon', name: 'Candlestick' },
+  { type: 'Weapon', name: 'Knife' },
+  { type: 'Weapon', name: 'Lead Pipe' },
+  { type: 'Weapon', name: 'Wrench' },
+  { type: 'Weapon', name: 'Rope' },
+  { type: 'Suspect', name: 'Miss Scarlet' },
+  { type: 'Suspect', name: 'Professor Plum' },
+  { type: 'Suspect', name: 'Mrs. Peacock' },
+  { type: 'Suspect', name: 'Mr. Green' },
+  { type: 'Suspect', name: 'Colonel Mustard' },
+  { type: 'Suspect', name: 'Mrs. White' },
+  { type: 'Room', name: 'Kitchen' },
+  { type: 'Room', name: 'Ballroom' },
+  { type: 'Room', name: 'Conservatory' },
+  { type: 'Room', name: 'Dining Room' },
+  { type: 'Room', name: 'Billiard Room' },
+  { type: 'Room', name: 'Library' },
+  { type: 'Room', name: 'Lounge' },
+  { type: 'Room', name: 'Hall' },
+  { type: 'Room', name: 'Study' }
+];
+
 // GET
 export async function GET (req: Request) {
   try {
@@ -154,11 +180,12 @@ export async function POST (request: Request) { // this will contain most game l
 export async function PUT (request: Request) {
 
   try {
-
+    console.log("/game PUT")
     const { gameid, email, gameData, playerData } = await request.json();
     if ((gameData.games[0].gameowner === email ?? "") && gameData.games[0].gamestate == 'open') {
 
       const { playerCount, playerEmails } = await getPlayerCountEmails(playerData);
+      console.log("playerEmails: ", playerEmails);
 
       // close the game state from new players joining and set TurnCount
       // anything that isn't 'open' corresponds to 'closed'. we use this field to indicate what type of turn a player can make. we always start with a move
@@ -167,11 +194,11 @@ export async function PUT (request: Request) {
         SET GameState = 'In Progress', TurnCount = ${playerCount}
         WHERE GameID = ${gameid}`;
 
-      const { solutionCards, playerCards, playerCharacters } = distributeClueCards(playerCount, allClueCards);
- 
+      const { solutionCards, playerCards, playerCharacters } = distributeClueCards(playerCount, playerEmails, allClueCards);
+      console.log("playerCards: ", playerCards);  
+
       await setSolutionCards(gameid, solutionCards);
-      await setPlayerCards(playerEmails, playerCards);
-      await setPlayerTurns(playerEmails);
+      await setPlayerCards(playerCards); 
       await setPlayerCharacters(playerEmails, playerCharacters);
       await setMostRecentAction(gameid, "Let's begin!");
 
@@ -180,14 +207,10 @@ export async function PUT (request: Request) {
 
     }
 
-    // fetch the cards at $email plus player locations and return them to the game component
-    const playerCardsRet = await getPlayerCards(email);
-    const playerCoordsRet = await getAllPlayerCoords(gameid);
-    const playerCharactersRet = await fetchPlayersWithCharacters(gameid);
-    const playerIconsRet = await fetchPlayersWithIcons(gameid);
-    return NextResponse.json({ playerCards: playerCardsRet, playerCoords: playerCoordsRet, playerCharacters : playerCharactersRet, playerIcons : playerIconsRet }, { status: 200 });
+    return NextResponse.json({ message: "Game Started" }, { status: 200 });
 
   } catch (error) {
+    console.error('An error occurred:', error);
     return NextResponse.json({error}, {status: 500});
   }
 
@@ -200,29 +223,6 @@ type GameRequestBody = {
   playerMove: string;
 };
 
-const allClueCards: string[][] = [
-  ['Weapon', 'Revolver'],
-  ['Weapon', 'Candlestick'],
-  ['Weapon', 'Knife'],
-  ['Weapon', 'Lead Pipe'],
-  ['Weapon', 'Wrench'],
-  ['Weapon', 'Rope'],
-  ['Suspect', 'Miss Scarlet'],
-  ['Suspect', 'Professor Plum'],
-  ['Suspect', 'Mrs. Peacock'],
-  ['Suspect', 'Mr. Green'],
-  ['Suspect', 'Colonel Mustard'],
-  ['Suspect', 'Mrs. White'],
-  ['Room', 'Kitchen'],
-  ['Room', 'Ballroom'],
-  ['Room', 'Conservatory'],
-  ['Room', 'Dining Room'],
-  ['Room', 'Billiard Room'],
-  ['Room', 'Library'],
-  ['Room', 'Lounge'],
-  ['Room', 'Hall'],
-  ['Room', 'Study']
-];
 
 const hallways: number[][] = [
   [1, 0],
@@ -258,7 +258,7 @@ const blankSpaces: number[][] = [
   [3, 3]
 ]
 
-function shuffleArray(array: string[][]): string[][] {
+function shuffleArray(array: Card[]): Card[] {
   const shuffledArray = array.slice();
   for (let i = shuffledArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -267,9 +267,10 @@ function shuffleArray(array: string[][]): string[][] {
   return shuffledArray;
 }
 
-function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]): { solutionCards: string[][], playerCards: string[][][], playerCharacters: string[] } {
-  // Create an array of arrays to hold the cards for each player
-  const playerCards: string[][][] = new Array(numberOfPlayers).fill([]).map(() => []);
+
+function distributeClueCards(numberOfPlayers: number, playerEmails: string[], allClueCards: Card[]): { solutionCards: Card[], playerCards: PlayerCard[], playerCharacters: string[] } {
+  // Create an array to hold the cards for each player
+  const playerCards: PlayerCard[] = new Array(numberOfPlayers).fill({ email: '', cards: [] });
 
   // Shuffle the Clue cards
   const shuffledCards = shuffleArray(allClueCards);
@@ -278,11 +279,11 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
   const cardsPerPlayer = Math.floor((shuffledCards.length - 3) / numberOfPlayers);
 
   // Put away one card of each type for the solution
-  const solutionCards: string[][] = [];
-  const remainingCards: string[][] = [];
+  const solutionCards: Card[] = [];
+  const remainingCards: Card[] = [];
 
   for (const card of shuffledCards) {
-    if (solutionCards.length < 3 && !solutionCards.some((c) => c[0] === card[0])) {
+    if (solutionCards.length < 3 && !solutionCards.some((c: Card) => c.type === card.type)) {
       solutionCards.push(card);
     } else {
       remainingCards.push(card);
@@ -293,16 +294,19 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
   for (let i = 0; i < numberOfPlayers; i++) {
     const startIndex = i * cardsPerPlayer;
     const endIndex = (i + 1) * cardsPerPlayer;
-    playerCards[i] = remainingCards.slice(startIndex, endIndex);
+    playerCards[i] = {
+      email: playerEmails[i],
+      cards: remainingCards.slice(startIndex, endIndex)
+    };
   }
 
   // Distribute any remaining cards to players starting from the first player
   let currentPlayerIndex = 0;
   for (const card of remainingCards.slice(cardsPerPlayer * numberOfPlayers)) {
-    playerCards[currentPlayerIndex].push(card);
+    playerCards[currentPlayerIndex].cards.push(card);
     currentPlayerIndex = (currentPlayerIndex + 1) % numberOfPlayers;
   }
-
+  
   // Get 'numberOfPlayers' characters randomly
   const shuffledCharacters = suspectNames.sort(() => Math.random() - 0.5);
   const playerCharacters = shuffledCharacters.slice(0, numberOfPlayers);
@@ -312,7 +316,7 @@ function distributeClueCards(numberOfPlayers: number, allClueCards: string[][]):
 
 async function getPlayerCountEmails(playerData: any): Promise<{ playerCount: number, playerEmails: string[] }> {
   try {
-    console.log("/api/game playerData: ", playerData);
+    // console.log("/api/game playerData: ", playerData);
     const playerEmails = playerData?.players.map((player: any) => player.email);
 
     return { playerCount: playerEmails.length, playerEmails };
@@ -322,38 +326,30 @@ async function getPlayerCountEmails(playerData: any): Promise<{ playerCount: num
   }
 }
 
-async function getPlayerCards(email: string): Promise<string[][]> {
-  try {
-    // Run the SQL query to get the updated player information
-    const updatedPlayer = await sql`
-      SELECT *
-      FROM Players
-      WHERE email = ${email};
-    `;
+async function getPlayerCards(email: string): Promise<Card[]> {
+    const playerData = await db.query('SELECT * FROM Players WHERE email = ?', [email]);
+    const cardsString = playerData[0].cards;
+    let cardsArray;
 
-    // Define a regular expression to match the elements
-    const regex = /\['(.*?)', '(.*?)'\]/g;
+    try {
+        cardsArray = JSON.parse(cardsString);
+    } catch (error) {
+        throw new Error('Failed to parse cardsString');
+    }
 
-    const resultArray: string[][] = [];
+    const resultArray: Card[] = [];
 
-    // Use a loop to extract the elements using the regex
-    let match;
-    while ((match = regex.exec(updatedPlayer.rows[0].cards)) !== null) {
-      const [, category, value] = match;
-      resultArray.push([category, value]);
+    for (let i = 0; i < cardsArray.length; i++) {
+        const card = cardsArray[i];
+        if (Array.isArray(card) && card.length === 2) {
+            resultArray.push({ type: card[0], name: card[1] });
+        } else {
+            throw new Error('Card data is not in the expected format');
+        }
     }
 
     return resultArray;
-  } catch (error) {
-    console.error('An error occurred:', error);
-    throw error;
-  }
 }
-
-type PlayerCard = {
-  email: string;
-  cards: string[];
-};
 
 async function setPlayerCards(playerCards: PlayerCard[]): Promise<void> {
   try {
@@ -364,13 +360,13 @@ async function setPlayerCards(playerCards: PlayerCard[]): Promise<void> {
         continue;
       }
 
-      // Get the cards array for the current player
-      const cardsString = `'${playerCard.cards.join("', '")}'`;
+      // Convert the cards array to a JSON string
+      const cardsString = JSON.stringify(playerCard.cards);
 
       // Run the SQL query to update player cards
       await sql`
         UPDATE Players
-        SET cards = [${cardsString}]
+        SET cards = ${cardsString}::json
         WHERE email = ${playerCard.email};`;
     }
   } catch (error) {
@@ -431,15 +427,16 @@ async function getPlayerCharacter(email: string): Promise<string> {
   }
 }
 
-async function setSolutionCards(gameid: string, solutionCards: string[][]): Promise<void> {
+async function setSolutionCards(gameid: string, solutionCards: Card[]): Promise<void> {
 
   try {
-    const cardsString = solutionCards.map(innerArray => `ARRAY['${innerArray.join("', '")}']`).join(',');
+    // Convert the solutionCards array to a JSON string
+    const cardsString = JSON.stringify(solutionCards);
 
     // Run the SQL query to update solution cards
     await sql`
       UPDATE Games
-      SET solution = ARRAY[${cardsString}]
+      SET solution = ${cardsString}::json
       WHERE GameID = ${gameid};`;
 
   } catch (error) {
@@ -449,31 +446,22 @@ async function setSolutionCards(gameid: string, solutionCards: string[][]): Prom
 
 }
 
-async function getSolutionCards(gameid: string): Promise<string[][]> {
+async function getSolutionCards(gameid: string): Promise<Card[]> {
   try {
-    // Run the SQL query to get the updated player information
+    // Run the SQL query to get the solution cards
     const solutionCards = await sql`
-      SELECT *
+      SELECT solution
       FROM Games
       WHERE GameID = ${gameid};
     `;
 
-    // Define a regular expression to match the elements
-    const regex = /\['(.*?)', '(.*?)'\]/g;
-
-    const resultArray: string[][] = [];
-
-    // Use a loop to extract the elements using the regex
-    let match;
-    while ((match = regex.exec(solutionCards.rows[0].solution)) !== null) {
-      const [, category, value] = match;
-      resultArray.push([category, value]);
-    }
+    // Parse the JSON string to an array of objects
+    const resultArray = JSON.parse(solutionCards.rows[0].solution);
 
     return resultArray;
   } catch (error) {
     console.error('An error occurred:', error);
-    throw error
+    throw error;
   }
 }
 

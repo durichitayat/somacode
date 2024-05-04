@@ -24,7 +24,7 @@ export async function GET (request: Request) {
             GameOwner VARCHAR(255),
             FOREIGN KEY (GameOwner) REFERENCES Users(email),
             
-            solution TEXT[][],
+            solution JSON,
 
             GameState VARCHAR(50),
 

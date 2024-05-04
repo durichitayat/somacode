@@ -21,9 +21,9 @@ export default async function Lobby( {params}: any ) {
 
   const { rows: game } = await sql`SELECT * FROM Games WHERE gameid = ${params.slug} LIMIT 1`;
 
-  console.log("rows: ", rows)
-  console.log("user: ", session.user?.email)
-  console.log("gamestate: ", game[0].gamestate)
+  // console.log("rows: ", rows)
+  // console.log("user: ", session.user?.email)
+  // console.log("gamestate: ", game[0].gamestate)
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-cover bg-center">

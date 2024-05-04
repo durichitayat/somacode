@@ -48,20 +48,22 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
             return;
           }
           const responseData = await response.json();
-          setPlayerData(responseData);
+          if (responseData !== playerData) {
+            setPlayerData(responseData);
+            console.log("playerData:", responseData);
+          }
         } catch (error) {
           console.error('An error occurred:', error);
         }
       }
-
     fetchPlayers();
     const intervalId = setInterval(fetchPlayers, 50000);
-    console.log("Clueless.tsx playerData:", playerData);
     // Clear the interval on component unmount or before creating a new interval
     return () => {
       clearInterval(intervalId);
     };
-  }, [whoseTurn, gameid, email]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [whoseTurn]);
   
 
   // FETCH GAME DATA
@@ -82,24 +84,23 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
             const playerOrder = (turnCount % numPlayers) + 1;
             
             // Find the player whose turn it is
-            console.log("getGameData Clueless.tsx playerData:", playerData);
             const currentPlayer = playerData.players.find(player => player.turnorder === playerOrder);
   
             // Set whoseTurn to the email of the current player
             setWhoseTurn(currentPlayer?.email);
             setGameData(responseData);
+            console.log("gameData:", responseData);
           }
   
-          console.log("Clueless.tsx gameData inside useEffect:", gameData);   
         } catch (error) {
           console.error('An error occurred:', error);
         }
       }
-  
-      fetchGame();
-      console.log("Clueless.tsx currentPlayer:", whoseTurn);
-      console.log("Clueless.tsx gameData:", gameData);
-    }, [playerData, gameid, email]);
+      if (playerData && playerData.players.length > 0){
+        fetchGame();
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [playerData]);
 
 
 
@@ -232,20 +233,19 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
           {playerData && playerData.players.filter((player: any) => player.email === email).map((player: any, index: number) => {
             const { email, cards } = player;
             return (
-              <div key={index} className={`grid grid-cols-1 justify-start ${whoseTurn === email ? "bg-green-800" : ""}`}>
-                <div className="flex items-center">
-                  {cards ? cards.map((row: any, rowIndex: number ) => (
-                      <div key={rowIndex}  className="grid  my-2">
-                        <p className='font-bold'>{row[1]}</p>
-                        <p className='text-xs text-slate-500'>{row[0]}</p>
-                      </div>
-                  )) : (
+            <div key={index} className={`grid grid-cols-1 justify-start `}>
+                {cards ? cards.sort((a, b) => a.type.localeCompare(b.type)).map((card: any, index: number ) => (
+                    console.log("Clueless.tsx card:", card),
+                    <div key={index}  className="grid  my-2 ml-4">
+                        <p className='text-sm '>{card.name}</p>
+                        <p className='text-xs text-slate-500'>{card.type}</p>
+                    </div>
+                )) : (
                     <div className="text-xs text-gray-500">Your cards will be revealed when the game starts</div>
-                  )}
-                </div>
-              </div>
+                )}
+            </div>
             );
-          })}
+        })}
         </div>
         
         {/* Players */}

@@ -26,7 +26,7 @@ export async function GET (request: Request) {
           TurnOrder INT,
           XCoord INT,
           YCoord INT,
-          cards TEXT[][],
+          cards JSON,
           character VARCHAR(50),
           Active BOOLEAN
         )
