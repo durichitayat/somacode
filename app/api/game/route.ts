@@ -183,7 +183,6 @@ export async function PUT (request: Request) {
   } catch (error) {
     return NextResponse.json({error}, {status: 500});
   }
-
 }
 
 

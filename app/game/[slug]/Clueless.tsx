@@ -86,12 +86,13 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
       clearInterval(intervalId);
     };
   }, [email, gameid, apiUrl]);
+  console.log("Clueless.tsx playerData:", playerData);
 
   // START GAME FUNCTION
   const handleStart = async (email: string, gameid: string) => {
     try {
-      const response = await fetch('/api/game/start', {
-        method: 'PATCH',
+      const response = await fetch('/api/game', {
+        method: 'PUT',
         body: JSON.stringify({ 
           gameid: gameid, 
           email: email
@@ -200,13 +201,17 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
             <p className='text-xs text-gray-500'>Owner: {gameData?.games[0].gameowner}</p>
             <p className='text-xs text-yellow-500'>Status: {gameData?.games[0].gamestate}</p>
           </div>
-          <button onClick={() => handleStart(email, gameid)} className="mt-4 py-2.5 px-5 mx-2 text-white bg-pink-700 hover:bg-pink-600 rounded-full">Start Game</button>
+          {gameData && gameData?.games[0].gamestate === 'open' && (
+            (email === gameData?.games[0].gameowner && playerData?.players.length > 1) 
+              ? <button onClick={() => handleStart(email, gameid)} className="mt-4 py-2.5 px-5 mx-2 text-white bg-pink-700 hover:bg-pink-600 rounded-full">Start Game</button>
+              : <button disabled className='mt-4 py-2.5 px-5 mx-2 text-white bg-gray-700 hover:bg-gray-600 rounded-full'>Waiting for more players to join</button>
+          )}
         </div>
 
         {/* Your Cards */}
         <div className='grid grid-cols-1 justify-start p-4 bg-slate-900 shadow'>
           <h2 className="my-2 font-bold">Your Cards</h2>
-          {playerData && playerData.players.map((player: any, index: number) => {
+          {playerData && playerData.players.filter((player: any) => player.email === email).map((player: any, index: number) => {
             const { email, cards } = player;
             return (
               <div key={index} className={`grid grid-cols-1 justify-start ${whoseTurn === email ? "bg-green-800" : ""}`}>

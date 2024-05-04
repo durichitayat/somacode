@@ -4,8 +4,6 @@ type NotesGrid = boolean[][];
 
 export default function ClueNotes(playerData: any) {
 
-    console.log("ClueNotes.tsx playerData: ", playerData)
-
     const numPlayers = playerData && playerData.players ? playerData.players.length : 0;
 
     const [notes, setNotes] = useState<NotesGrid>(

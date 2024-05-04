@@ -138,6 +138,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         }
     }, [playerData]);
 
+    // Move player Function
     const handleRoomMoveClick = async (y: number, x: number, email: string, gameid: string) => {
         alert(`you moved to y: ${y}, x: ${x}`);
         try {
