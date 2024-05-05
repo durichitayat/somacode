@@ -373,7 +373,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
       </div>
       
       <div className="grid col-1"> {/* 2 times wider than the left column */}
-      <div className="grid grid-cols-5 gap-0 border border-purple-700 shadow-2xl bg-white"> {/* 2 times wider grid */}
+      <div className="grid grid-cols-5 gap-0 border border-purple-700 shadow-2xl bg-black"> {/* 2 times wider grid */}
         {Array.from({ length: 25 }, (_, index) => {
           const coords = findCoords(index);
           const emails = getEmailsFromCoords(coords, playerCoords);
@@ -393,7 +393,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             return (
               <div
                 key={index}
-                className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                className={`bg-black w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
                 style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
@@ -412,7 +412,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             return (
               <div
                 key={index}
-                className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                className={`bg-black w-32 h-32 border border-black p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
                 style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
