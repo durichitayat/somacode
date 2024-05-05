@@ -245,25 +245,29 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
   return (
     <div className="flex items-start gap-8">
       <div className="w-96">
-        <h2 className="relative mb-4 mt-4">Your Cards:</h2>
-        {cards.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex flex-row">
-            <div className="w-32">
-              {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => (
-                <div key={colIndex} className="border p-2">
-                  {card}
-                </div>
-              ))}
+        <div className='grid grid-cols-1 justify-start p-4 bg-slate-900 shadow'>
+          <h2 className="my-2 font-bold">Your Cards</h2>
+        
+          {cards.map((row, rowIndex) => (
+            <div key={rowIndex} className="flex flex-row">
+              <div className="w-32">
+                {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => (
+                  <div key={colIndex} className="border p-2">
+                    {card}
+                  </div>
+                ))}
+              </div>
+              <div className="w-32">
+                {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => (
+                  <div key={colIndex} className="border p-2">
+                    {card}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="w-32">
-              {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => (
-                <div key={colIndex} className="border p-2">
-                  {card}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+          ))}
+          
+        </div>
 
         <h2 className="relative mb-4 mt-4">Players:</h2>
         {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
