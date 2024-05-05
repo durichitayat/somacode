@@ -396,7 +396,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
               <div
                 key={index}
                 className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
+                style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
                 onClick={() => handleRoomMoveClick(coords)}
