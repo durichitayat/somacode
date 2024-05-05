@@ -1,13 +1,13 @@
 "use client"
 
 { /* DeleteButton Component */}
-export default function DeleteButton( params : { email: string }) {
+export default function DeleteButton( params : { email: string, gameid: string }) {
 
   const handleDelete = async () => {
     try {
       const response = await fetch('/api/user', {
         method: 'DELETE',
-        body: JSON.stringify({ email: params.email }),
+        body: JSON.stringify({ email: params.email, gameid: params.gameid }),
       });
       const data = await response.json();
       console.log(data.message);

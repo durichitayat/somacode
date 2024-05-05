@@ -78,16 +78,29 @@ export async function DELETE (request: Request) {
   // JSON
   const data = await request.json();
   const email = data.email;
+  const gameid = data.gameid;
 
   try {
-    if (!email ) {
-      return NextResponse.json({error: 'Missing email'}, {status: 400});
+    if (gameid === "false") {
+      if (!email ) {
+        return NextResponse.json({error: 'Missing email'}, {status: 400});
+      }
+      await sql`DELETE FROM Users WHERE email = ${email}`;
+      return NextResponse.json({message: 'User deleted successfully'}, {status: 200});
     }
-    await sql`
-    DELETE FROM Users WHERE email = ${email}`
+    if (email === "false") {
+      if (!gameid ) {
+        return NextResponse.json({error: 'Missing game'}, {status: 400});
+      }
+      // First, delete related player records
+      await sql`DELETE FROM Players WHERE gameid = ${gameid}`;
+      // Then, delete the game
+      await sql`DELETE FROM Games WHERE gameid = ${gameid}`;
+      return NextResponse.json({message: 'Game deleted successfully'}, {status: 200});
+    }
+    return NextResponse.json({message: 'There was an error.'}, {status: 200});
   } catch (error) {
+    console.log(error)
     return NextResponse.json({error}, {status: 500});
   }
-
-  return NextResponse.json({message: 'User deleted successfully'}, {status: 200});
 }
