@@ -386,7 +386,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
           if (index === 6 || index === 8 || index === 16 || index === 18) {
             return (
-              <div key={index} className='bg-gray-800' ></div> // Render a blank spot
+              <div key={index} className='bg-gray-900' ></div> // Render a blank spot
             );
           }
           if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
