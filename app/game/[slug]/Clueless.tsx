@@ -286,159 +286,136 @@ export default function Clueless({
   return (
     <>
     <div className="flex items-start gap-8">
+      <div className='w-96'>
+        {/* Clue CARDS */}
+        <div className="grid grid-cols-1 justify-start p-4 bg-slate-900 mb-4">
+          <h2 className="relative mb-4 mt-4">Your Cards:</h2>
+          {/* Displaying the cards */}
+          <div className="grid grid-cols-3 gap-4">
+            {cards.map((row, rowIndex) => (
+              <div key={rowIndex}>
+                {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => {
+                  // Determine the image source based on the card type
+                  let imageSource: string | undefined;
+                  if (suspectCards[card]) {
+                    imageSource = suspectCards[card];
+                  } else if (roomCards[card]) {
+                    imageSource = roomCards[card];
+                  } else if (weaponCards[card]) {
+                    imageSource = weaponCards[card];
+                  }
 
-      <div className="w-96">
-        <h2 className="relative mb-4 mt-4">Your Cards:</h2>
-        {/* Displaying the cards */}
-        {cards.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex flex-row">
-            {/* First column */}
-            <div className="w-48">
-              {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => {
-                // Determine the image source based on the card type
-                let imageSource: string | undefined;
-                if (suspectCards[card]) {
-                  imageSource = suspectCards[card];
-                } else if (roomCards[card]) {
-                  imageSource = roomCards[card];
-                } else if (weaponCards[card]) {
-                  imageSource = weaponCards[card];
-                }
-
-                // Render the card with the image
-                return (
-                  <div key={colIndex} className="border p-2">
-                    {imageSource ? (
-                      <img src={imageSource} alt={card} className="w-full h-full object-cover" />
-                    ) : (
-                      card
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {/* Second column */}
-            <div className="w-48">
-              {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => {
-                // Determine the image source based on the card type
-                let imageSource: string | undefined;
-                if (suspectCards[card]) {
-                  imageSource = suspectCards[card];
-                } else if (roomCards[card]) {
-                  imageSource = roomCards[card];
-                } else if (weaponCards[card]) {
-                  imageSource = weaponCards[card];
-                }
-
-                // Render the card with the image
-                return (
-                  <div key={colIndex} className="border p-2">
-                    {imageSource ? (
-                      <img src={imageSource} alt={card} className="w-full h-full object-cover" />
-                    ) : (
-                      card
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  // Render the card with the image
+                  return (
+                    <div key={colIndex}>
+                      {imageSource ? (
+                        <img src={imageSource} alt={card} className=" w-24 h-36 object-cover" />
+                      ) : (
+                        card
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
 
         {/* Player information */}
         {/* Players */}
         <div className='grid grid-cols-1 justify-start p-4 bg-slate-900 my-4'>
-        <h2 className="relative mb-4 mt-4">Players:</h2>
-        {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
-          <div key={rowIndex} className={`flex flex-row py-2 ${whoseTurn === email && 'bg-green-800' }`}>
-            <img src={playerIconsInp[email]} alt="Player Icon" className="w-12 h-12 rounded-full mx-5" />
-            <div className="p-2" >
-              <p className='font-bold'>{character}</p>
-              <p className="truncate text-xs text-gray-400">{email}</p>
+          <h2 className="relative mb-4 mt-4">Players:</h2>
+          {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
+            <div key={rowIndex} className={`flex flex-row py-2 ${whoseTurn === email && 'bg-green-800' }`}>
+              <img src={playerIconsInp[email]} alt="Player Icon" className="w-12 h-12 rounded-full mx-5" />
+              <div className="p-2" >
+                <p className='font-bold'>{character}</p>
+                <p className="truncate text-xs text-gray-400">{email}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* Selection dropdowns */}
+          <div className="relative mb-4 mt-4">
+            <select
+              value={selectedRoom}
+              onChange={(e) => setSelectedRoom(e.target.value)}
+              className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
+            >
+              <option value="">Select Room</option>
+              {roomNames.map((name, index) => (
+                <option key={index} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z" />
+              </svg>
             </div>
           </div>
-        ))}
 
-        {/* Selection dropdowns */}
-        <div className="relative mb-4 mt-4">
-          <select
-            value={selectedRoom}
-            onChange={(e) => setSelectedRoom(e.target.value)}
-            className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
-          >
-            <option value="">Select Room</option>
-            {roomNames.map((name, index) => (
-              <option key={index} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-              <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z" />
-            </svg>
+          <div className="relative mb-4">
+            <select
+              value={selectedSuspect}
+              onChange={(e) => setSelectedSuspect(e.target.value)}
+              className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
+            >
+              <option value="">Select Suspect</option>
+              {suspectNames.map((name, index) => (
+                <option key={index} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z" />
+              </svg>
+            </div>
           </div>
-        </div>
 
-        <div className="relative mb-4">
-          <select
-            value={selectedSuspect}
-            onChange={(e) => setSelectedSuspect(e.target.value)}
-            className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
-          >
-            <option value="">Select Suspect</option>
-            {suspectNames.map((name, index) => (
-              <option key={index} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-              <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z" />
-            </svg>
+          <div className="relative mb-4">
+            <select
+              value={selectedWeapon}
+              onChange={(e) => setSelectedWeapon(e.target.value)}
+              className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
+            >
+              <option value="">Select Weapon</option>
+              {weaponNames.map((name, index) => (
+                <option key={index} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z" />
+              </svg>
+            </div>
           </div>
-        </div>
 
-        <div className="relative mb-4">
-          <select
-            value={selectedWeapon}
-            onChange={(e) => setSelectedWeapon(e.target.value)}
-            className="block appearance-none w-full bg-gray-800 border border-gray-600 text-white py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500"
-          >
-            <option value="">Select Weapon</option>
-            {weaponNames.map((name, index) => (
-              <option key={index} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <svg className="fill-current h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-              <path d="M10 12h-3l4-4 4 4h-3v4h-2v-4z" />
-            </svg>
+          {/* Buttons for Suggest, Accuse, and Skip actions */}
+          <div className="flex justify-center space-x-4 mb-4">
+            <button onClick={handleSuggest} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+              Suggest
+            </button>
+            <button onClick={handleAccuse} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+              Accuse
+            </button>
+            <button onClick={handleSkip} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+              Skip
+            </button>
           </div>
-        </div>
 
-        {/* Buttons for Suggest, Accuse, and Skip actions */}
-        <div className="flex justify-center space-x-4 mb-4">
-          <button onClick={handleSuggest} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-            Suggest
-          </button>
-          <button onClick={handleAccuse} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-            Accuse
-          </button>
-          <button onClick={handleSkip} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-            Skip
-          </button>
-        </div>
-
-        {/* Displaying server response and latest action */}
-        <div className="my-2">
-          <strong className="text-gray-700">Server Response:</strong> {serverResponse}
-        </div>
-        <div className="my-2">
-          <strong className="text-gray-700">Latest Action:</strong> {mostRecentAction}
+          {/* Displaying server response and latest action */}
+          <div className="my-2">
+            <strong className="text-gray-700">Server Response:</strong> {serverResponse}
+          </div>
+          <div className="my-2">
+            <strong className="text-gray-700">Latest Action:</strong> {mostRecentAction}
+          </div>
         </div>
       </div>
       
@@ -483,7 +460,7 @@ export default function Clueless({
               <div
                 key={index}
                 className={`bg-black w-32 h-32 border border-black p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
+                style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', transform: 'rotate(90deg)' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
                 onClick={() => handleRoomMoveClick(coords)}
@@ -690,7 +667,6 @@ export default function Clueless({
         )}
       </div>
       </div>
-    </div>
     </>
   );
 }
