@@ -1,6 +1,7 @@
+'use client'
 import React from 'react';
 
-export default function CluelessInstructionsPage() {
+export default function About() {
     return (
         <div className="container mx-auto py-10 px-4 text-center">
             <h1 className="text-3xl font-bold mb-6 text-white">Clue-Less Game Instructions</h1>
