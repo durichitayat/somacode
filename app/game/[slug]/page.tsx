@@ -18,7 +18,7 @@ export default async function Game( {params}: any ) {
   // Function to get base URL
   const getApiBaseUrl = () => {
     const isProduction = process.env.NODE_ENV === 'production';
-    return isProduction ? 'https://somacode.vercel.app/' : 'http://localhost:3000';
+    return isProduction ? 'https://somacode.vercel.app' : 'http://localhost:3000';
   };
 
   // Construct API URL

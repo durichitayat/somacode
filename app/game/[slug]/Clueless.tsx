@@ -6,11 +6,12 @@ type NotesGrid = boolean[][];
 // Function to get base URL
 const getApiBaseUrl = () => {
   const isProduction = process.env.NODE_ENV === 'production';
-  return isProduction ? 'https://somacode.vercel.app/' : 'http://localhost:3000';
+  return isProduction ? 'https://somacode.vercel.app' : 'http://localhost:3000';
 };
 
 // Construct API URL
 const apiUrl = `${getApiBaseUrl()}/api/game`;
+console.log("apiURL:",apiUrl)
 
 export default function Clueless({ gameid, email, cards, playerCoordsInp, playerCharsInp, playerIconsInp }: { gameid: string, email: string, cards: string[][], playerCoordsInp: { [email: string]: number[][] }, playerCharsInp: { [email: string]: string }, playerIconsInp: { [email: string]: string } }) {
   const [whoseTurn, setWhoseTurn] = useState<string>();
