@@ -20,13 +20,15 @@ const weaponNames = [
 interface ActionsProps {
     gameid: string;
     email: string;
-    setWhoseTurn: any;
+    whoseTurn: any;
+    setWhoseTurn: (turn: string) => void; 
     playerData: any;
+    gameData: any;
     open: boolean;
     setOpen: (open: boolean) => void;
   }
 
-  export default function Actions({ gameid, email, setWhoseTurn, playerData, open, setOpen }: ActionsProps) {
+  export default function Actions({ gameid, email, whoseTurn, setWhoseTurn, playerData, gameData, open, setOpen }: ActionsProps) {
 
   const cancelButtonRef = useRef(null)
 
@@ -49,16 +51,18 @@ interface ActionsProps {
               gameid: gameid, 
               email: email,
               playerMove: selectedSuspect + ", " + selectedWeapon, 
-              playerData: playerData
+              playerData: playerData,
+              gameData: gameData,
+              whoseTurn: whoseTurn
           }),
       });
           const responseData = await response.json();
-          const fetchedTurnData = responseData.currentTurn;
+        //   const fetchedTurnData = responseData.currentTurn;
           const fetchedPlayerCoordsData = responseData.playerCoords;
           const fetchedServerResponse = responseData.result;
           const fetchedMostRecentAction = responseData.mostRecentAction;
           setPlayerCoords(fetchedPlayerCoordsData);
-          setWhoseTurn(() => fetchedTurnData);
+        //   setWhoseTurn(() => fetchedTurnData);
           setServerResponse(() => fetchedServerResponse);
           setMostRecentAction(() => fetchedMostRecentAction);
           setInputValue('');
@@ -98,28 +102,11 @@ interface ActionsProps {
 
   const handleSkip = async () => {
       try {
-      const response = await fetch(apiUrl, {
-          method: 'POST',
-          body: JSON.stringify({ 
-          gameid: gameid, 
-          email: email,
-          playerMove: "no"
-          }),
-      });
-        const responseData = await response.json();
-        const fetchedTurnData = responseData.currentTurn;
-        const fetchedPlayerCoordsData = responseData.playerCoords;
-        const fetchedServerResponse = responseData.result;
-        const fetchedMostRecentAction = responseData.mostRecentAction;
-        setPlayerCoords(fetchedPlayerCoordsData);
-        setWhoseTurn(() => fetchedTurnData);
-        setServerResponse(() => fetchedServerResponse);
-        setMostRecentAction(() => fetchedMostRecentAction);
-        setInputValue('');
+        setWhoseTurn(() => whoseTurn + 1);
+        setOpen(false);
+
       } catch (error) {
         console.error('An error occurred:', error);
-        setServerResponse(() => 'An error occurred: ' + error);
-        setInputValue('');
       }
   }
   

@@ -1,3 +1,5 @@
+'use client'
+
 /* eslint-disable @next/next/no-img-element */
 import React from "react";
 import { useState, useCallback, useEffect } from 'react';
@@ -140,6 +142,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
     whoseTurn, 
     setOpen
   }) => {
+
+    useEffect(() => {
+        console.log("whoseTurn: ", whoseTurn);
+    }, [whoseTurn]);
 
     // console.log("whoseTurn: ", whoseTurn);
 

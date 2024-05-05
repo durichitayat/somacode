@@ -45,7 +45,7 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
         }
       }
     fetchPlayers();
-    const intervalId = setInterval(fetchPlayers, 50000);
+    const intervalId = setInterval(fetchPlayers, 5000);
     // Clear the interval on component unmount or before creating a new interval
     return () => {
       clearInterval(intervalId);
@@ -55,39 +55,43 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
 
   // FETCH GAME DATA
   useEffect(() => {
-      const fetchGame = async () => {
-        try {
-          const response: Response = await fetch(`/api/game?gameid=${gameid}`, { 
-            method: 'GET'
-          });
+    const fetchGame = async () => {
+      try {
+        const response: Response = await fetch(`/api/game?gameid=${gameid}`, { 
+          method: 'GET'
+        });
 
-          const responseData = await response.json();
+        const responseData = await response.json();
 
-          if (responseData !== gameData) {
-            const numPlayers = playerData?.players.length;
-            const turnCount = responseData?.games[0].turncount;
+        if (responseData !== gameData) {
+          const numPlayers = playerData?.players.length;
+          const turnCount = responseData?.games[0].turncount;
 
-            // Calculate playerOrder based on turnCount
-            const playerOrder = turnCount % numPlayers;
+          // Calculate playerOrder based on turnCount
+          const playerOrder = turnCount % numPlayers;
 
-            // Find the player whose turn it is
-            const currentPlayer = playerData.players[playerOrder];
+          // Find the player whose turn it is
+          const currentPlayer = playerData.players[playerOrder];
 
-            // Set whoseTurn to the email of the current player
+          // Set whoseTurn to the email of the current player
+          // Only if it has changed
+          if (currentPlayer !== whoseTurn) {
             setWhoseTurn(currentPlayer);
-            setGameData(responseData);
-            console.log("gameData:", responseData);
           }
 
-        } catch (error) {
-          console.error('An error occurred:', error);
+          setGameData(responseData);
+          console.log("gameData:", responseData);
         }
+
+      } catch (error) {
+        console.error('An error occurred:', error);
       }
-      if (playerData && playerData.players.length > 0){
-        fetchGame();
-      }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [playerData]);
+    }
+    if (playerData && playerData.players.length > 0){
+      fetchGame();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerData, whoseTurn]); // Add whoseTurn to the dependency array
 
   // START GAME FUNCTION
   const handleStart = async (email: string, gameid: string) => {
@@ -105,7 +109,7 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
     } catch (error) {
       console.error('An error occurred:', error);
     }
-};
+  };
 
 
   return (
@@ -173,8 +177,10 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
         <Actions 
           gameid={gameid}
           email={email}
+          whoseTurn={whoseTurn}
           setWhoseTurn={setWhoseTurn}
           playerData={playerData} 
+          gameData={gameData}
           open={open}
           setOpen={setOpen}
         />
