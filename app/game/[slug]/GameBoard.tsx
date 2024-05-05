@@ -123,16 +123,18 @@ interface Player {
 interface GameBoardProps {
     playerData: any;
     email: string;
+    whoseTurn: string;
   }
 
 const GameBoard: React.FC<GameBoardProps> = ({ 
     playerData, 
-    email
+    email,
+    whoseTurn
   }) => {
 
     // Move player Function
     const handleRoomMoveClick = async (y: number, x: number, email: string, gameid: string) => {
-        alert(`you moved to y: ${y}, x: ${x}`);
+        // alert(`you moved to y: ${y}, x: ${x}`);
         try {
           const response = await fetch('/api/game/move', {
             method: 'PATCH',
@@ -153,13 +155,12 @@ const GameBoard: React.FC<GameBoardProps> = ({
     let playersLookup = {};
     if (playerData && playerData.players) {
         playersLookup = playerData.players.reduce((acc: any, player: any) => {
-            console.log("player: ", player);    
+            // console.log("player: ", player);    
             const key = `${player.xcoord}-${player.ycoord}`;
             acc[key] = player;
             return acc;
         }, {});
     }
-    console.log("playersLookup: ", playersLookup); 
 
     return (
         <>
@@ -174,16 +175,19 @@ const GameBoard: React.FC<GameBoardProps> = ({
                 ( 
                 <>
                 <a 
-                    className="relative cursor-pointer "
-                    onClick={() => handleRoomMoveClick(room.y, room.x, email, playerData.gameid )}
-                >
+                    className={`relative ${whoseTurn === email ? "cursor-pointer" : ""}`}
+                    onClick={
+                        whoseTurn === email 
+                        ? () => { handleRoomMoveClick(room.y, room.x, email, playerData.gameid)} 
+                        : () => {}
+                    }>
                     <img src={room?.img} alt={room?.name || ""} className="w-28 h-28 object-cover " />
                     <p className="absolute inset-0 flex items-center justify-center text-center opacity-0 shadow hover:opacity-100 hover:bg-purple-800 transition-all text-xs">{room.name}</p>
 
                     {/* Check if there's a player in the current room */}
                     {playersLookup[`${room.x}-${room.y}`] && (
                     <div className="z-10 absolute top-0 left-0 w-full h-full items-center justify-center text-center text-xs bg-black/70 flex">
-                        <div className=" bg-purple-700 w-4 h-4 rounded-full mx-1"></div>
+                        <div className={`w-4 h-4 rounded-full mx-1 ${whoseTurn === playersLookup[`${room.x}-${room.y}`]?.email ? "bg-green-500" : "bg-purple-500"}`}></div>
                         <div>{playersLookup[`${room.x}-${room.y}`].character}</div>
                     </div>
                     )}

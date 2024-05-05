@@ -342,6 +342,8 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
       <GameBoard 
         email={email}
         playerData={playerData}
+        whoseTurn={whoseTurn}
+        setWhoseTurn={setWhoseTurn}
       />
       
       <ClueNotes 
