@@ -248,14 +248,14 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         <h2 className="relative mb-4 mt-4">Your Cards:</h2>
         {cards.map((row, rowIndex) => (
           <div key={rowIndex} className="flex flex-row">
-            <div className="w-48">
+            <div className="w-32">
               {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => (
                 <div key={colIndex} className="border p-2">
                   {card}
                 </div>
               ))}
             </div>
-            <div className="w-48">
+            <div className="w-32">
               {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => (
                 <div key={colIndex} className="border p-2">
                   {card}
@@ -268,13 +268,13 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
         <h2 className="relative mb-4 mt-4">Players:</h2>
         {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
           <div key={rowIndex} className="flex flex-row">
-            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
+            <div className="w-32 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
               <div className="truncate">{email}</div>
             </div>
-            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
+            <div className="w-32 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
               <div>{character}</div>
             </div>
-            <div className="w-48 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
+            <div className="w-32 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
               <img src={playerIconsInp[email]} alt="Player Icon" className="w-12 h-12" />
             </div>
           </div>
@@ -370,9 +370,8 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
       </div>
       
-      <div className="w-240"> {/* 2 times wider than the left column */}
-      <div className="w-240"> {/* 2 times wider than the left column */}
-      <div className="grid grid-cols-5 gap-2"> {/* 2 times wider grid */}
+      <div className="grid col-1"> {/* 2 times wider than the left column */}
+      <div className="grid grid-cols-5 gap-0 border border-purple-700 shadow-2xl bg-white"> {/* 2 times wider grid */}
         {Array.from({ length: 25 }, (_, index) => {
           const coords = findCoords(index);
           const emails = getEmailsFromCoords(coords, playerCoords);
@@ -385,14 +384,14 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
           if (index === 6 || index === 8 || index === 16 || index === 18) {
             return (
-              <div key={index} ></div> // Render a blank spot
+              <div key={index} className='bg-gray-300' ></div> // Render a blank spot
             );
           }
           if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
             return (
               <div
                 key={index}
-                className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
                 style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
@@ -411,7 +410,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             return (
               <div
                 key={index}
-                className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
                 style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
@@ -492,13 +491,13 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
               )}
 
               <div 
-                className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                className={`w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-100' : ''}`}
                 style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
                 onClick={() => handleRoomMoveClick(coords)}
               >
-                <div className="font-bold">{roomName}</div>
+                <div className="z-20 inline-flex h-full w-full absolute inset-0 items-center justify-center text-center opacity-0 shadow hover:opacity-100 transition delay-75 duration-300 ease-in-out text-xs hover:bg-pink-700">{roomName}</div>
                 <div className="flex">
                   {emails.map((email, i) => (
                     <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 10px lime)' } : {}}/>
@@ -509,7 +508,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           );
         })}
       </div>
-    </div>
+
 
 {/* Clue notes interface */}
 {isClueNotesOpen ? (
