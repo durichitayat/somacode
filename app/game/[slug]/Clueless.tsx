@@ -15,13 +15,13 @@ const getApiBaseUrl = () => {
 
 export default function Clueless({ gameid, email }: { gameid: string, email: string}) {
   
-  
   // CONSTANTS
   const apiUrl = `${getApiBaseUrl()}/api/game?gameid=${gameid}`;
 
   const [gameData, setGameData] = useState<any>();
   const [playerData, setPlayerData] = useState<any>();
   const [whoseTurn, setWhoseTurn] = useState<any>(null);
+  const [open, setOpen] = useState(false)
 
   // FETCH PLAYER DATA
   useEffect(() => {
@@ -174,6 +174,9 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
           gameid={gameid}
           email={email}
           setWhoseTurn={setWhoseTurn}
+          playerData={playerData} 
+          open={open}
+          setOpen={setOpen}
         />
 
       </div>
@@ -182,6 +185,7 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
         email={email}
         playerData={playerData}
         whoseTurn={whoseTurn}
+        setOpen={setOpen}
       />
       
       <ClueNotes 

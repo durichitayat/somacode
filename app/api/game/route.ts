@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 type PlayerCard = { email: string, cards: Card[] };
 type Card = { type: string, name: string }
 type GameboardClueRooms = { [key: string]: { name: string }};
-type GameRequestBody = { gameid: string, email: string, playerMove: string };
+type GameRequestBody = { gameid: string, email: string, playerMove: string, playerData: any, gameData: any };
 type SetPlayerCoordsFunction = (playerEmails: string[], playerRooms: number[][], gameid: string) => Promise<void>;
 
 
@@ -379,8 +379,7 @@ async function getPlayerCountEmails(playerData: any): Promise<{ playerCount: num
   }
 }
 
-async function getPlayerCards(email: string): Promise<Card[]> {
-    const playerData = await db.query('SELECT * FROM Players WHERE email = ?', [email]);
+async function getPlayerCards(email: string, playerData: any): Promise<Card[]> {
     const cardsString = playerData[0].cards;
     let cardsArray;
 
@@ -964,10 +963,9 @@ async function processPlayerSuggestion(suggestion: string, email: string, gameid
         LIMIT 1;`;
       const currPlayerEmail = playerEmail.length > 0 ? playerEmail[0].email : null;
 
-      const currPlayerCards = await getPlayerCards(currPlayerEmail);
-
       let matches: string[] = [];
 
+      // @TODO: use playerData and currPlayerEmail to get the cards for the current player
       for (const card of currPlayerCards) {
         const name = card[1];
   

@@ -124,6 +124,7 @@ interface GameBoardProps {
     playerData: any;
     email: string;
     whoseTurn: any;
+    setOpen: any;
   }
 
 function isWithinOneBlock(player: any, room: any) {
@@ -136,10 +137,11 @@ function isWithinOneBlock(player: any, room: any) {
 const GameBoard: React.FC<GameBoardProps> = ({ 
     playerData, 
     email,
-    whoseTurn
+    whoseTurn, 
+    setOpen
   }) => {
 
-    console.log("whoseTurn: ", whoseTurn);
+    // console.log("whoseTurn: ", whoseTurn);
 
     // Move player Function
 const handleRoomMoveClick = async (y: number, x: number, email: string, gameid: string) => {
@@ -197,7 +199,7 @@ const handleRoomMoveClick = async (y: number, x: number, email: string, gameid: 
                         whoseTurn?.email === email && isWithinOneBlock(whoseTurn, room)
                         ? async () => { 
                             const result = await handleRoomMoveClick(room.y, room.x, email, playerData.gameid);
-                            alert(result);
+                            setOpen(true)
                         }
                         : () => {}
                     }>
