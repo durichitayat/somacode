@@ -1,8 +1,30 @@
+/* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
 
 type NotesGrid = boolean[][];
 
+const suspectNames = [
+'Miss Scarlet', 'Professor Plum', 'Mrs. Peacock',
+'Mr. Green', 'Colonel Mustard', 'Mrs. White'
+]
+
+const weaponNames = [
+'Revolver', 'Candlestick', 'Knife',
+'Lead Pipe', 'Wrench', 'Rope'
+];
+
+const roomNames = [
+'Kitchen', 'Ballroom', 'Conservatory', 'Dining room',
+'Billiard Room', 'Library', 'Lounge', 'Hall', 'Study'
+];
+
+
 export default function ClueNotes(playerData: any) {
+
+
+    // CLUE NOTES STATE
+    const [isClueNotesOpen, setIsClueNotesOpen] = useState(true);
+
 
     const numPlayers = playerData && playerData.players ? playerData.players.length : 0;
 
@@ -22,7 +44,7 @@ export default function ClueNotes(playerData: any) {
 
         {/* CLUE NOTES */}
 
-        {/* {isClueNotesOpen ? (
+        {isClueNotesOpen ? (
             <div className="absolute top-0 right-0 z-10 p-4">
             <button onClick={() => setIsClueNotesOpen(false)} className="flex items-center justify-center bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700">
                 <span className="mr-2">Hide Clue Notes</span>
@@ -35,7 +57,7 @@ export default function ClueNotes(playerData: any) {
                 <tbody>
                     <tr>
                     <td className="p-2"></td>
-                    {Object.values(playerIconsInp).map((playerIcon, index) => (
+                    {Object.values(playerData).map((playerIcon, index) => (
                         <td key={index} className="p-2 text-center">
                         <img src={playerIcon} alt={`Player ${index + 1}`} className="h-8 w-8" />
                         </td>
@@ -120,6 +142,6 @@ export default function ClueNotes(playerData: any) {
                 </svg>
             </button>
             </div>
-        )} */}
+        )}
     </>
 )}

@@ -23,9 +23,6 @@ export default function Clueless({ gameid, email }: { gameid: string, email: str
   const [playerData, setPlayerData] = useState<any>();
   const [whoseTurn, setWhoseTurn] = useState<any>(null);
 
-  // CLUE NOTES STATE
-  const [isClueNotesOpen, setIsClueNotesOpen] = useState(true);
-
   // FETCH PLAYER DATA
   useEffect(() => {
     const fetchPlayers = async () => {
