@@ -37,7 +37,6 @@ const getApiBaseUrl = () => {
 
 // Construct API URL
 const apiUrl = `${getApiBaseUrl()}/api/game`;
-console.log("apiURL:",apiUrl)
 
 export default function Clueless({
   gameid,
@@ -45,7 +44,7 @@ export default function Clueless({
   cards,
   playerCoordsInp,
   playerCharsInp,
-  playerIconsInp
+  playerIconsInp,
 }: {
   gameid: string;
   email: string;
@@ -54,7 +53,7 @@ export default function Clueless({
   playerCharsInp: { [email: string]: string };
   playerIconsInp: { [email: string]: string };
 }) {
-  const [whoseTurn, setWhoseTurn] = useState<string>();
+  const [whoseTurn, setWhoseTurn] = useState<string | undefined>();
   const [serverResponse, setServerResponse] = useState<string>('');
   const [mostRecentAction, setMostRecentAction] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
@@ -77,7 +76,7 @@ export default function Clueless({
           body: JSON.stringify({
             gameid: gameid,
             email: "fetchStatus",
-            playerMove: "fetchStatus"
+            playerMove: "fetchStatus",
           }),
         });
         const responseData = await response.json();
@@ -111,7 +110,7 @@ export default function Clueless({
         body: JSON.stringify({
           gameid: gameid,
           email: email,
-          playerMove: `${selectedSuspect}, ${selectedWeapon}`
+          playerMove: `${selectedSuspect}, ${selectedWeapon}`,
         }),
       });
       const responseData = await response.json();
@@ -138,7 +137,7 @@ export default function Clueless({
         body: JSON.stringify({
           gameid: gameid,
           email: email,
-          playerMove: `${selectedSuspect}, ${selectedWeapon}, ${selectedRoom}`
+          playerMove: `${selectedSuspect}, ${selectedWeapon}, ${selectedRoom}`,
         }),
       });
       const responseData = await response.json();
@@ -165,7 +164,7 @@ export default function Clueless({
         body: JSON.stringify({
           gameid: gameid,
           email: email,
-          playerMove: "no"
+          playerMove: "no",
         }),
       });
       const responseData = await response.json();
@@ -263,7 +262,7 @@ export default function Clueless({
         body: JSON.stringify({
           gameid: gameid,
           email: email,
-          playerMove: coordsString
+          playerMove: coordsString,
         }),
       });
       const responseData = await response.json();
@@ -423,13 +422,13 @@ export default function Clueless({
 
         {/* Buttons for Suggest, Accuse, and Skip actions */}
         <div className="flex justify-center space-x-4 mb-4">
-          <button onClick={() => handleSuggest()} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          <button onClick={handleSuggest} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             Suggest
           </button>
-          <button onClick={() => handleAccuse()} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          <button onClick={handleAccuse} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             Accuse
           </button>
-          <button onClick={() => handleSkip()} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          <button onClick={handleSkip} className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             Skip
           </button>
         </div>
@@ -442,98 +441,30 @@ export default function Clueless({
           <strong className="text-gray-700">Latest Action:</strong> {mostRecentAction}
         </div>
       </div>
-      
-      <div className="grid col-1"> {/* 2 times wider than the left column */}
-      <div className="grid grid-cols-5 gap-0 border border-purple-700 shadow-2xl bg-white"> {/* 2 times wider grid */}
-        {Array.from({ length: 25 }, (_, index) => {
-          const coords = findCoords(index);
-          const emails = getEmailsFromCoords(coords, playerCoords);
-          const roomName = roomCoordinates[`${coords[0]},${coords[1]}`]?.name || '';
-          const backgroundImage = roomImages[roomName];
-          const renderStudySecretPassage = index === 0;
-          const renderLoungeSecretPassage = index === 4;
-          const renderConservatorySecretPassage = index === 20;
-          const renderKitchenSecretPassage = index === 24;
 
-          if (index === 6 || index === 8 || index === 16 || index === 18) {
-            return (
-              <div key={index} className='bg-gray-300' ></div> // Render a blank spot
-            );
-          }
-          if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) { // Adjust cell at index 2
-            return (
-              <div
-                key={index}
-                className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
-                onClick={() => handleRoomMoveClick(coords)}
-              >
-                <div className="font-bold">{roomName}</div>
-                <div className="flex">
-                  {emails.map((email, i) => (
-                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}/>
-                  ))}
-                </div>
-              </div>
-            );
-          }
-          if (index === 5 || index === 7 || index === 9 || index === 15 || index === 17 || index === 19) {
-            return (
-              <div
-                key={index}
-                className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
-                onClick={() => handleRoomMoveClick(coords)}
-              >
-                <div className="font-bold">{roomName}</div>
-                <div className="flex flex-col">
-                  {emails.map((email, i) => (
-                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full my-1" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}/>
-                  ))}
-                </div>
-              </div>
-            );
-          }          
-          return (
-            <div 
-            key={index}
-            className="relative"
-            >
-              {renderStudySecretPassage && (
-                <div 
-                  className={`absolute bottom-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -1 ? 'opacity-70' : ''}`}
-                  onMouseEnter={() => handleMouseEnter(-1)}
-                  onMouseLeave={handleMouseLeave}
-                  onClick={() => handleRoomMoveClick([4,4])}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(180deg)' }}>
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M7 7l10 10" />
-                    <path d="M16 7l-9 0l0 9" />
-                  </svg>
-                </div>
-              )}
-            // Rendering empty cells
+      {/* Game board grid */}
+      <div className="grid col-1">
+        <div className="grid grid-cols-5 gap-0 border border-purple-700 shadow-2xl bg-white">
+          {Array.from({ length: 25 }, (_, index) => {
+            const coords = findCoords(index);
+            const emails = getEmailsFromCoords(coords, playerCoords);
+            const roomName = roomCoordinates[`${coords[0]},${coords[1]}`]?.name || '';
+            const backgroundImage = roomImages[roomName];
+            const renderStudySecretPassage = index === 0;
+            const renderLoungeSecretPassage = index === 4;
+            const renderConservatorySecretPassage = index === 20;
+            const renderKitchenSecretPassage = index === 24;
+
             if (index === 6 || index === 8 || index === 16 || index === 18) {
-              return <div key={index} className=""></div>;
+              return <div key={index} className="bg-gray-300" />;
             }
 
-            // Rendering hallway cells
             if (index === 1 || index === 3 || index === 11 || index === 13 || index === 21 || index === 23) {
               return (
                 <div
                   key={index}
-                  className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                  style={{
-                    background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`,
-                    backgroundPosition: 'center',
-                    backgroundSize: '100% 100%',
-                    backgroundRepeat: 'no-repeat'
-                  }}
+                  className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                  style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick(coords)}
@@ -554,18 +485,12 @@ export default function Clueless({
               );
             }
 
-            // Rendering additional hallway cells
             if (index === 5 || index === 7 || index === 9 || index === 15 || index === 17 || index === 19) {
               return (
                 <div
                   key={index}
-                  className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                  style={{
-                    background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`,
-                    backgroundPosition: 'center',
-                    backgroundSize: '100% 100%',
-                    backgroundRepeat: 'no-repeat'
-                  }}
+                  className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                  style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick(coords)}
@@ -586,7 +511,6 @@ export default function Clueless({
               );
             }
 
-            // Rendering the rooms and secret passages
             return (
               <div key={index} className="relative">
                 {/* Secret passage from Study to Kitchen */}
@@ -617,78 +541,97 @@ export default function Clueless({
                   </div>
                 )}
 
-              {renderLoungeSecretPassage && (
-                <div 
-                  className={`absolute bottom-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -2 ? 'opacity-70' : ''}`}
-                  onMouseEnter={() => handleMouseEnter(-2)}
-                  onMouseLeave={handleMouseLeave}
-                  onClick={() => handleRoomMoveClick([4,0])}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(270deg)' }}>
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M7 7l10 10" />
-                    <path d="M16 7l-9 0l0 9" />
-                  </svg>
-                </div>
-              )}
+                {/* Secret passage from Lounge to Conservatory */}
+                {renderLoungeSecretPassage && (
+                  <div
+                    className={`absolute bottom-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -2 ? 'opacity-70' : ''}`}
+                    onMouseEnter={() => handleMouseEnter(-2)}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={() => handleRoomMoveClick([4, 0])}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="black"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left"
+                      style={{ transform: 'rotate(270deg)' }}
+                    >
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M7 7l10 10" />
+                      <path d="M16 7l-9 0l0 9" />
+                    </svg>
+                  </div>
+                )}
 
-              {renderConservatorySecretPassage && (
-                <div 
-                  className={`absolute top-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -3 ? 'opacity-70' : ''}`}
-                  onMouseEnter={() => handleMouseEnter(-3)}
-                  onMouseLeave={handleMouseLeave}
-                  onClick={() => handleRoomMoveClick([0,4])}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left" style={{ transform: 'rotate(90deg)' }}>
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M7 7l10 10" />
-                    <path d="M16 7l-9 0l0 9" />
-                  </svg>
-                </div>
-              )}
+                {/* Secret passage from Conservatory to Lounge */}
+                {renderConservatorySecretPassage && (
+                  <div
+                    className={`absolute top-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -3 ? 'opacity-70' : ''}`}
+                    onMouseEnter={() => handleMouseEnter(-3)}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={() => handleRoomMoveClick([0, 4])}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="black"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left"
+                      style={{ transform: 'rotate(90deg)' }}
+                    >
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M7 7l10 10" />
+                      <path d="M16 7l-9 0l0 9" />
+                    </svg>
+                  </div>
+                )}
 
-              {renderKitchenSecretPassage && (
-                <div 
-                  className={`absolute top-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -4 ? 'opacity-70' : ''}`}
-                  onMouseEnter={() => handleMouseEnter(-4)}
-                  onMouseLeave={handleMouseLeave}
-                  onClick={() => handleRoomMoveClick([0,0])}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M7 7l10 10" />
-                    <path d="M16 7l-9 0l0 9" />
-                  </svg>
-                </div>
-              )}
+                {/* Secret passage from Kitchen to Study */}
+                {renderKitchenSecretPassage && (
+                  <div
+                    className={`absolute top-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -4 ? 'opacity-70' : ''}`}
+                    onMouseEnter={() => handleMouseEnter(-4)}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={() => handleRoomMoveClick([0, 0])}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="black"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-up-left"
+                    >
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M7 7l10 10" />
+                      <path d="M16 7l-9 0l0 9" />
+                    </svg>
+                  </div>
+                )}
 
-              <div 
-                className={`w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-100' : ''}`}
-                style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
-                onClick={() => handleRoomMoveClick(coords)}
-              >
-                <div className="z-20 inline-flex h-full w-full absolute inset-0 items-center justify-center text-center opacity-0 shadow hover:opacity-100 transition delay-75 duration-300 ease-in-out text-xs hover:bg-pink-700">{roomName}</div>
-                <div className="flex">
-                  {emails.map((email, i) => (
-                    <img key={i} src={playerIconsInp[email]} alt="Player Image" className="w-10 h-10 rounded-full mr-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 10px lime)' } : {}}/>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-                {/* Rendering room and emails */}
+                {/* Room cell */}
                 <div
-                  className={`w-48 h-48 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                  className={`w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
                   style={{
                     background: `url(${backgroundImage})`,
                     backgroundPosition: 'center',
                     backgroundSize: '100% 100%',
-                    backgroundRepeat: 'no-repeat'
+                    backgroundRepeat: 'no-repeat',
                   }}
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
