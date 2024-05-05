@@ -393,7 +393,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             return (
               <div
                 key={index}
-                className={`bg-black w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
+                className={`bg-black border border-gray-700 w-32 h-32 p-12 text-center ${hoveredCell === index ? 'opacity-100' : ''}`}
                 style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
@@ -434,7 +434,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             >
               {renderStudySecretPassage && (
                 <div 
-                  className={`absolute bottom-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -1 ? 'opacity-70' : ''}`}
+                  className={`absolute bottom-0 right-0 w-10 h-10 bg-gray-700 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -1 ? 'opacity-100' : 'opacity-50'}`}
                   onMouseEnter={() => handleMouseEnter(-1)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick([4,4])}
@@ -449,7 +449,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
               {renderLoungeSecretPassage && (
                 <div 
-                  className={`absolute bottom-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -2 ? 'opacity-70' : ''}`}
+                  className={`absolute bottom-0 left-0 w-10 h-10 bg-gray-700 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -2 ? 'opacity-100' : 'opacity-50'}`}
                   onMouseEnter={() => handleMouseEnter(-2)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick([4,0])}
@@ -464,7 +464,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
               {renderConservatorySecretPassage && (
                 <div 
-                  className={`absolute top-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -3 ? 'opacity-70' : ''}`}
+                  className={`absolute top-0 right-0 w-10 h-10 bg-gray-700 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -3 ? 'opacity-100' : 'opacity-50'}`}
                   onMouseEnter={() => handleMouseEnter(-3)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick([0,4])}
@@ -479,7 +479,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
               {renderKitchenSecretPassage && (
                 <div 
-                  className={`absolute top-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -4 ? 'opacity-70' : ''}`}
+                  className={`absolute top-0 left-0 w-10 h-10 bg-gray-700 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -4 ? 'opacity-100' : 'opacity-50'}`}
                   onMouseEnter={() => handleMouseEnter(-4)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick([0,0])}
@@ -493,7 +493,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
               )}
 
               <div 
-                className={`w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-100' : ''}`}
+                className={`w-32 h-32 border border-gray-700 p-12 text-center ${hoveredCell === index ? 'opacity-100' : ''}`}
                 style={{ background: `url(${backgroundImage})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
