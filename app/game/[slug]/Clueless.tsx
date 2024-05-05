@@ -249,19 +249,18 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           <h2 className="my-2 font-bold">Your Cards</h2>
         
           {cards.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex flex-row">
-              <div className="w-32">
+            <div key={rowIndex} className="grid grid-col-2">
+              <div className="my-2 ml-4 ">
                 {row.slice(0, Math.ceil(row.length / 2)).map((card, colIndex) => (
-                  <div key={colIndex} className="border p-2">
+                  <p className='text-sm' >
                     {card}
-                  </div>
+                  </p>
                 ))}
-              </div>
-              <div className="w-32">
+              
                 {row.slice(Math.ceil(row.length / 2)).map((card, colIndex) => (
-                  <div key={colIndex} className="border p-2">
+                  <p className="text-sm text-gray-500">
                     {card}
-                  </div>
+                  </p>
                 ))}
               </div>
             </div>
@@ -415,7 +414,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
               <div
                 key={index}
                 className={`bg-white w-32 h-32 border p-12 text-center ${hoveredCell === index ? 'opacity-50' : ''}`}
-                style={{ background: `url(${'https://mediaproxy.snopes.com/width/1200/height/1200/https://media.snopes.com/2018/07/wavy_floor_hallway_prevent_kids_running_miscaption_faux.jpg'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
+                style={{ background: `url(${'/board/passage.png'})`, backgroundPosition: 'center', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
                 onClick={() => handleRoomMoveClick(coords)}
@@ -436,7 +435,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
             >
               {renderStudySecretPassage && (
                 <div 
-                  className={`absolute bottom-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -1 ? 'opacity-70' : ''}`}
+                  className={`absolute bottom-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -1 ? 'opacity-70' : ''}`}
                   onMouseEnter={() => handleMouseEnter(-1)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick([4,4])}
@@ -451,7 +450,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
               {renderLoungeSecretPassage && (
                 <div 
-                  className={`absolute bottom-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -2 ? 'opacity-70' : ''}`}
+                  className={`absolute bottom-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -2 ? 'opacity-70' : ''}`}
                   onMouseEnter={() => handleMouseEnter(-2)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick([4,0])}
@@ -466,7 +465,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
               {renderConservatorySecretPassage && (
                 <div 
-                  className={`absolute top-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -3 ? 'opacity-70' : ''}`}
+                  className={`absolute top-0 right-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -3 ? 'opacity-70' : ''}`}
                   onMouseEnter={() => handleMouseEnter(-3)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick([0,4])}
@@ -481,7 +480,7 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
 
               {renderKitchenSecretPassage && (
                 <div 
-                  className={`absolute top-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-10 transition-opacity duration-300 ${hoveredCell === -4 ? 'opacity-70' : ''}`}
+                  className={`absolute top-0 left-0 w-10 h-10 bg-gray-300 flex justify-center items-center cursor-pointer z-50 transition-opacity duration-300 ${hoveredCell === -4 ? 'opacity-70' : ''}`}
                   onMouseEnter={() => handleMouseEnter(-4)}
                   onMouseLeave={handleMouseLeave}
                   onClick={() => handleRoomMoveClick([0,0])}
