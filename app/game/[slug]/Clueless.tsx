@@ -268,20 +268,19 @@ export default function Clueless({ gameid, email, cards, playerCoordsInp, player
           
         </div>
 
+        {/* Players */}
+        <div className='grid grid-cols-1 justify-start p-4 bg-slate-900 my-4'>
         <h2 className="relative mb-4 mt-4">Players:</h2>
         {Object.entries(playerCharsInp).map(([email, character], rowIndex) => (
-          <div key={rowIndex} className="flex flex-row">
-            <div className="w-32 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
-              <div className="truncate">{email}</div>
-            </div>
-            <div className="w-32 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
-              <div>{character}</div>
-            </div>
-            <div className="w-32 border p-2" style={whoseTurn === email ? { filter: 'drop-shadow(0 0 5px lime)' } : {}}>
-              <img src={playerIconsInp[email]} alt="Player Icon" className="w-12 h-12" />
+          <div key={rowIndex} className={`flex flex-row py-2 ${whoseTurn === email && 'bg-green-800' }`}>
+            <img src={playerIconsInp[email]} alt="Player Icon" className="w-12 h-12 rounded-full mx-5" />
+            <div className="p-2" >
+              <p className='font-bold'>{character}</p>
+              <p className="truncate text-xs text-gray-400">{email}</p>
             </div>
           </div>
         ))}
+        </div>
         
         {/* <form onSubmit={handleMoveSubmit} className="mt-4">
           <input
