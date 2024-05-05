@@ -8,9 +8,9 @@ export default function About() {
             
             <h2 className="text-2xl font-bold mb-2 text-white">Signing In Through GitHub</h2>
             <p className="text-white pl-4">
-                1. Access the Clue-Less Project: Open your web browser and navigate to the Clue-Less project's website.
+                1. Access the Clue-Less Project: Open your web browser and navigate to the Clue-Less website.
                 <br />
-                2. GitHub Sign-In: On the homepage, look for a button labeled "Sign in with GitHub" or something similar. Click the button to proceed.
+                2. GitHub Sign-In: On the homepage, look for a button labeled Sign in with GitHub. Click the button to proceed.
                 <br />
                 3. Enter your GitHub credentials to log in and accept the permissions request.
                 <br />
@@ -23,14 +23,14 @@ export default function About() {
             <p className="text-white mb-6 pl-4">
                 1. After signing in, you will land on the homepage of the Clue-Less project.
                 <br />
-                2. Navigate to the Dashboard by clicking on the "Dashboard" button in the left-hand side navigation menu.
+                2. Navigate to the Dashboard by clicking on the Dashboard button in the left-hand side navigation menu.
             </p>
             
             <h2 className="text-2xl font-bold mb-2 text-white">Creating a New Game Session</h2>
             <p className="text-white mb-6 pl-4">
                 1. On the Dashboard page, enter a name for the new game session in the provided input field.
                 <br />
-                2. Click "New Game" to create the new game session with the specified name.
+                2. Click New Game to create the new game session with the specified name.
                 <br />
                 3. Click on the game name to enter the game session.
                 <br />
