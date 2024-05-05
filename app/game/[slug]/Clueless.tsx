@@ -284,7 +284,9 @@ export default function Clueless({
 
   // Rendering the component
   return (
+    <>
     <div className="flex items-start gap-8">
+
       <div className="w-96">
         <h2 className="relative mb-4 mt-4">Your Cards:</h2>
         {/* Displaying the cards */}
@@ -687,7 +689,9 @@ export default function Clueless({
           </div>
         )}
       </div>
+      </div>
     </div>
+    </>
   );
 }
 
@@ -716,6 +720,7 @@ function getEmailsFromCoords(coords: [number, number], playerCoords: { [email: s
       emails.push(email);
     }
   }
+
 
   return emails;
 }
