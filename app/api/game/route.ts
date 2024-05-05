@@ -153,121 +153,121 @@ export async function GET (req: Request) {
   }
 }
 
-// // POST
-// export async function POST (request: Request) { // this will contain most game logic so keep it tidy! functions wherever you can
-//   try {
+// POST
+export async function POST (request: Request) { // this will contain most game logic so keep it tidy! functions wherever you can
+  try {
 
-//     // get player move info and log
-//     const { gameid, email, playerMove }: GameRequestBody = await request.json();
-//     // console.log("email: ", email, "playerMove: ", playerMove);
+    // get player move info and log
+    const { gameid, email, playerMove }: GameRequestBody = await request.json();
+    // console.log("email: ", email, "playerMove: ", playerMove);
 
-//     // get current player's turn info and player coords at start b/c it will get used in a lot of cases
-//     let playerTurnEmail = await whoseTurnIsIt(gameid);
-//     let playerCoords = await getAllPlayerCoords(gameid);
-//     let mostRecentAction = await getMostRecentAction(gameid);
+    // get current player's turn info and player coords at start b/c it will get used in a lot of cases
+    let playerTurnEmail = await whoseTurnIsIt(gameid);
+    let playerCoords = await getAllPlayerCoords(gameid);
+    let mostRecentAction = await getMostRecentAction(gameid);
 
-//     // if it's a fetchStatus call (representing a 5 sec refresh), return the turn count and all player locations
-//     // @todo change it so that we don't have to send all player locations, only the most recent
-//     if (email.toLowerCase() === "fetchstatus" && playerMove.toLowerCase() === "fetchstatus") {
-//       return NextResponse.json({ result: "Refresh...", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, {status: 200});
-//     }
+    // if it's a fetchStatus call (representing a 5 sec refresh), return the turn count and all player locations
+    // @todo change it so that we don't have to send all player locations, only the most recent
+    if (email.toLowerCase() === "fetchstatus" && playerMove.toLowerCase() === "fetchstatus") {
+      return NextResponse.json({ result: "Refresh...", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, {status: 200});
+    }
 
-//     // if it's not their turn, tell them so
-//     if (!(await isPlayerTurn(gameid, email))) {
-//       return NextResponse.json({ result: "Sorry, it's not your turn.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, {status: 200});
-//     }
+    // if it's not their turn, tell them so
+    if (!(await isPlayerTurn(gameid, email))) {
+      return NextResponse.json({ result: "Sorry, it's not your turn.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, {status: 200});
+    }
 
-//     if ((await getGameStatus(gameid)) === "move?") {
+    if ((await getGameStatus(gameid)) === "move?") {
 
-//       // input is a player move, so process it
-//       const movePlayerResult = await processPlayerMove(playerMove, email, gameid);
+      // input is a player move, so process it
+      const movePlayerResult = await processPlayerMove(playerMove, email, gameid);
 
-//       // if move is valid (meaning both good input and the space is available)
-//       if (movePlayerResult === "success") {
-//         playerCoords = await getAllPlayerCoords(gameid);
-//         mostRecentAction = await getMostRecentAction(gameid);
-//         if ((await isPlayerInRoom(gameid, email)) !== null) { // divert game flow to allow player to make a suggestion if player is in a room
-//           await setGameStatus(gameid, 'suggest?');
-//           return NextResponse.json({ result: "Success. Make a suggestion?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//         }
-//         await setGameStatus(gameid, 'accuse?');
-//         return NextResponse.json({ result: "Success. Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//       }
+      // if move is valid (meaning both good input and the space is available)
+      if (movePlayerResult === "success") {
+        playerCoords = await getAllPlayerCoords(gameid);
+        mostRecentAction = await getMostRecentAction(gameid);
+        if ((await isPlayerInRoom(gameid, email)) !== null) { // divert game flow to allow player to make a suggestion if player is in a room
+          await setGameStatus(gameid, 'suggest?');
+          return NextResponse.json({ result: "Success. Make a suggestion?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+        }
+        await setGameStatus(gameid, 'accuse?');
+        return NextResponse.json({ result: "Success. Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      }
 
-//       return NextResponse.json({ result: movePlayerResult, currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      return NextResponse.json({ result: movePlayerResult, currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
 
-//     }
+    }
 
-//     if ((await getGameStatus(gameid)) === "suggest?") { // for minimal increment, showing cards after a suggestion is automatic. it chooses one random refutal card if they have one. @todo in target, we will allow players to choose which card they'd like to show the suggestor
+    if ((await getGameStatus(gameid)) === "suggest?") { // for minimal increment, showing cards after a suggestion is automatic. it chooses one random refutal card if they have one. @todo in target, we will allow players to choose which card they'd like to show the suggestor
 
-//       if (playerMove === "no") { // player opted not to suggest. change game state to "accuse?"
-//         await setGameStatus(gameid, 'accuse?');
-//         return NextResponse.json({ result: "Okay! Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//       }
+      if (playerMove === "no") { // player opted not to suggest. change game state to "accuse?"
+        await setGameStatus(gameid, 'accuse?');
+        return NextResponse.json({ result: "Okay! Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      }
 
-//       const suggestionResult = await processPlayerSuggestion(playerMove, email, gameid);
+      const suggestionResult = await processPlayerSuggestion(playerMove, email, gameid);
 
-//       if (suggestionResult === "invalid") {
-//         return NextResponse.json({ result: "Sorry, invalid input. Make sure you select every option. Room will be the one you're already in.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//       }
+      if (suggestionResult === "invalid") {
+        return NextResponse.json({ result: "Sorry, invalid input. Make sure you select every option. Room will be the one you're already in.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      }
 
-//       await setGameStatus(gameid, 'accuse?');
-//       playerCoords = await getAllPlayerCoords(gameid);
-//       mostRecentAction = await getMostRecentAction(gameid);
-//       return NextResponse.json({ result: suggestionResult + "Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//     }
+      await setGameStatus(gameid, 'accuse?');
+      playerCoords = await getAllPlayerCoords(gameid);
+      mostRecentAction = await getMostRecentAction(gameid);
+      return NextResponse.json({ result: suggestionResult + "Make an accusation?", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+    }
 
-//     if ((await getGameStatus(gameid)) === "accuse?") {
+    if ((await getGameStatus(gameid)) === "accuse?") {
 
-//       if (playerMove === "no") { // player opted not to accuse. change game state to "move?" and update turn
-//         await setGameStatus(gameid, 'move?');
-//         playerTurnEmail = await updateTurn(gameid);
-//         return NextResponse.json({ result: "Okay!", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//       }
+      if (playerMove === "no") { // player opted not to accuse. change game state to "move?" and update turn
+        await setGameStatus(gameid, 'move?');
+        playerTurnEmail = await updateTurn(gameid);
+        return NextResponse.json({ result: "Okay!", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      }
 
-//       const accusationResult = await processPlayerAccusation(playerMove, email, gameid);
+      const accusationResult = await processPlayerAccusation(playerMove, email, gameid);
 
-//       if (accusationResult === "invalid") {
-//         return NextResponse.json({ result: "Sorry, invalid input. Make sure you select every option.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//       }
+      if (accusationResult === "invalid") {
+        return NextResponse.json({ result: "Sorry, invalid input. Make sure you select every option.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      }
 
-//       if (accusationResult === "false") {
-//         await deactivatePlayer(gameid, email);
-//         playerTurnEmail = await updateTurn(gameid);
-//         await setGameStatus(gameid, 'move?');
-//         if (await isGameOver(gameid)) {
-//           // set SolutionRevealed BOOLEAN in the Games table to true
-//           await setSolutionRevealed(gameid);
-//           // change gameState to 'done'
-//           await setGameStatus(gameid, 'done');
-//           // display to the rest of players who has won and what the solution was
-//           const winnerEmail = await getWinner(gameid);
-//           await appendMostRecentAction(gameid, "The game is over as a result of elimination. " + winnerEmail + " won!");
-//           mostRecentAction = await getMostRecentAction(gameid);
-//           return NextResponse.json({ result: "You lost, and the game is over.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//         }
-//         mostRecentAction = await getMostRecentAction(gameid);
-//         return NextResponse.json({ result: "You lost.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//       }
+      if (accusationResult === "false") {
+        await deactivatePlayer(gameid, email);
+        playerTurnEmail = await updateTurn(gameid);
+        await setGameStatus(gameid, 'move?');
+        if (await isGameOver(gameid)) {
+          // set SolutionRevealed BOOLEAN in the Games table to true
+          await setSolutionRevealed(gameid);
+          // change gameState to 'done'
+          await setGameStatus(gameid, 'done');
+          // display to the rest of players who has won and what the solution was
+          const winnerEmail = await getWinner(gameid);
+          await appendMostRecentAction(gameid, "The game is over as a result of elimination. " + winnerEmail + " won!");
+          mostRecentAction = await getMostRecentAction(gameid);
+          return NextResponse.json({ result: "You lost, and the game is over.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+        }
+        mostRecentAction = await getMostRecentAction(gameid);
+        return NextResponse.json({ result: "You lost.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      }
 
-//       if (accusationResult === "true") {
-//         // set SolutionRevealed BOOLEAN in the Games table to true
-//         await setSolutionRevealed(gameid);
-//         // change gameState to 'done'
-//         await setGameStatus(gameid, 'done');
-//         // display to the rest of players who has won and what the solution was
-//         mostRecentAction = await getMostRecentAction(gameid);
-//         return NextResponse.json({ result: "You won!", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
-//       }
-//     }
+      if (accusationResult === "true") {
+        // set SolutionRevealed BOOLEAN in the Games table to true
+        await setSolutionRevealed(gameid);
+        // change gameState to 'done'
+        await setGameStatus(gameid, 'done');
+        // display to the rest of players who has won and what the solution was
+        mostRecentAction = await getMostRecentAction(gameid);
+        return NextResponse.json({ result: "You won!", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+      }
+    }
 
-//     // if you've made it to the end, then something went wrong. invalid game state maybe?
-//     return NextResponse.json({ result: "Sorry, something went wrong.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
+    // if you've made it to the end, then something went wrong. invalid game state maybe?
+    return NextResponse.json({ result: "Sorry, something went wrong.", currentTurn: playerTurnEmail, playerCoords: playerCoords, mostRecentAction: mostRecentAction }, { status: 200 });
 
-//   } catch (error) {
-//     return NextResponse.json({error}, {status: 500});
-//   }
-// }
+  } catch (error) {
+    return NextResponse.json({error}, {status: 500});
+  }
+}
 
 // PUT
 export async function PUT (request: Request) {

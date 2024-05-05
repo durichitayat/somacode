@@ -10,10 +10,10 @@ export async function PATCH (req: Request) {
       // Update player's coordinates
       await sql`UPDATE Players SET xcoord = ${x}, ycoord = ${y} WHERE email = ${email} AND gameid = ${gameid}`;
       turnCount(gameid);
-      
+
       return NextResponse.json({ message: `${email} moved to y:${y}, x:${x}` }, {status: 200});
     } catch (error) {
-      return NextResponse.json({ error: error }, {status: 500});
+      return NextResponse.json({ message: error }, {status: 500});
     }
 }
 
