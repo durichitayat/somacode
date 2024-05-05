@@ -85,6 +85,16 @@ export default function AdminSidebar() {
                     </li>
                     
                     <AuthButton />
+
+                    <li>
+                        <Link href="/about" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                         <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M11 21a9 9 0 100-18 9 9 0 000 18zm0-2c3.865 0 7-3.135 7-7s-3.135-7-7-7-7 3.135-7 7 3.135 7 7 7zm1-5.75h2v-2h-2v2zm0-4h2v-4h-2v4z" />
+                         </svg>
+                         <span className="ms-3">About</span>
+                         </Link>
+                    </li>
+
                 </ul>
                 
             </div>
